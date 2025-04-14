@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gra E-learningowa: Mistrz Promptów Energetycznych</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* --- Style Podstawowe i Kontenerów (bez zmian) --- */
+        body { font-family: 'Press Start 2P', cursive; background-color: #2c3e50; color: #ecf0f1; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; line-height: 1.6; }
+        .game-wrapper { max-width: 800px; width: 100%; }
+        #start-screen, #game-container { background-color: #34495e; border: 4px solid #ecf0f1; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); text-align: center; }
+        #game-container { display: none; }
+
+        /* --- Nagłówki (bez zmian) --- */
+        h1 { color: #f1c40f; margin-bottom: 30px; font-size: 1.8em; text-shadow: 3px 3px #000; line-height: 1.3; }
+        h2 { color: #e67e22; margin-bottom: 25px; font-size: 1.1em; text-shadow: 2px 2px #000; }
+        h3 { color: #1abc9c; margin-bottom: 15px; font-size: 1.1em; text-shadow: 1px 1px #000; }
+        #feedback-display h3 { color: #f1c40f; margin-top: 0; text-align: center; text-shadow: 1px 1px #000; }
+
+        /* --- Tekst (bez zmian) --- */
+        p { font-size: 0.9em; line-height: 1.6; margin-bottom: 15px; text-align: left; }
+        #start-screen p { text-align: center; margin-left: auto; margin-right: auto; max-width: 90%; }
+        .content-area p { font-size: 0.8em; margin-bottom: 10px; max-width: 95%; line-height: 1.5; }
+        .content-area p:last-child { margin-bottom: 0; }
+        #task-text { text-align: center; font-size: 0.9em; font-weight: bold; }
+        .example-prompt, .context-snippet { background-color: #2c3e50; border: 1px dashed #7f8c8d; padding: 10px; margin: 10px 0; border-radius: 4px; font-size: 0.9em; white-space: pre-wrap; text-align: left; }
+        .example-prompt code, .context-snippet code { font-family: 'Press Start 2P', cursive; }
+        #task-context-wrapper { width: 95%; margin: 15px auto 0 auto; text-align: left; }
+        #task-context-wrapper .context-label { font-weight: bold; color: #ecf0f1; display: block; margin-bottom: 5px; font-size: 0.8em; }
+        #task-context-wrapper .task-question { font-weight: bold; color: #f1c40f; margin-top: 15px; display: block; font-size: 0.85em; text-align: center; }
+
+        /* --- Obszary Treści (bez zmian) --- */
+        .content-area { background-color: #2c3e50; padding: 20px; border: 2px dashed #95a5a6; margin-bottom: 25px; border-radius: 5px; min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        #explanation-display { display: none; }
+        #task-display { display: none; }
+
+        /* --- Pole Wprowadzania i Alternatywne Zadania --- */
+        #prompt-input-area { display: none; }
+        #prompt-input { width: calc(100% - 24px); height: 180px; font-family: 'Press Start 2P', cursive; background-color: #ecf0f1; color: #2c3e50; border: 2px solid #95a5a6; padding: 10px; margin-bottom: 20px; border-radius: 5px; font-size: 0.8em; box-sizing: border-box; }
+        #choice-task-area { display: none; width: 100%; text-align: left;}
+        .prompt-choice { background-color: #4a647e; border: 2px solid #95a5a6; padding: 15px; margin-bottom: 15px; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; }
+        .prompt-choice:hover { background-color: #5d7c9a; }
+        .prompt-choice input[type="radio"] { margin-right: 10px; vertical-align: middle; }
+        .prompt-choice label { vertical-align: middle; font-size: 0.85em; cursor: pointer; display: block; /* Etykieta zajmuje całą szerokość */ }
+        .prompt-choice pre { background-color: #2c3e50; padding: 8px; margin-top: 8px; border-radius: 3px; white-space: pre-wrap; word-wrap: break-word; font-size: 0.9em; }
+        /* Style dla zadania typu identify_knowledge_source */
+        .knowledge-source-question { margin-bottom: 15px; font-weight: bold; color: #f1c40f; }
+        .knowledge-source-output { background-color: #1a2531; border: 1px solid #7f8c8d; padding: 10px; margin-bottom: 15px; border-radius: 4px; font-style: italic; }
+
+
+        /* --- Przyciski (bez zmian) --- */
+        .button-container { margin-top: 20px; }
+        button { font-family: 'Press Start 2P', cursive; background-color: #2ecc71; color: #ffffff; border: 2px solid #27ae60; padding: 12px 25px; cursor: pointer; border-radius: 8px; font-size: 0.9em; transition: background-color 0.3s ease, transform 0.1s ease; box-shadow: 0 4px #27ae60; margin: 10px 5px; text-shadow: 1px 1px #1e824c; }
+        button:hover { background-color: #27ae60; }
+        button:active { transform: translateY(2px); box-shadow: 0 2px #27ae60; }
+        #start-button { background-color: #e67e22; border-color: #d35400; box-shadow: 0 4px #d35400; font-size: 1.1em; padding: 15px 35px; text-shadow: 1px 1px #b85a14; }
+        #start-button:hover { background-color: #d35400; }
+        #start-button:active { transform: translateY(2px); box-shadow: 0 2px #d35400; }
+        #proceed-button { background-color: #e67e22; border-color: #d35400; box-shadow: 0 4px #d35400; display: none; text-shadow: 1px 1px #b85a14; }
+        #proceed-button:hover { background-color: #d35400; }
+        #proceed-button:active { transform: translateY(2px); box-shadow: 0 2px #d35400; }
+        #submit-button { display: none; }
+        #submit-button.react-submit::after { content: " (Oceń Opis)"; font-size: 0.8em; }
+        #submit-button.choice-submit::after { content: " (Oceń Wybór)"; font-size: 0.8em; }
+        #submit-button.answer-submit::after { content: " (Oceń Odpowiedź)"; font-size: 0.8em; }
+        #next-button { background-color: #3498db; border-color: #2980b9; box-shadow: 0 4px #2980b9; display: none; text-shadow: 1px 1px #1f648d; }
+        #next-button:hover { background-color: #2980b9; }
+        #next-button:active { transform: translateY(2px); box-shadow: 0 2px #2980b9; }
+
+        /* --- Obszar Informacji Zwrotnej (bez zmian) --- */
+        #feedback-display { margin-top: 30px; background-color: #1a2531; padding: 20px; border-radius: 5px; border: 2px solid #7f8c8d; text-align: left; font-size: 0.8em; min-height: 150px; display: none; }
+        #feedback-display ul { list-style-type: none; padding: 0; }
+        #feedback-display li { margin-bottom: 10px; padding-left: 25px; position: relative; line-height: 1.4; }
+        #feedback-display li.good::before { content: '✅'; position: absolute; left: 0; top: 0; }
+        #feedback-display li.improve::before { content: '💡'; position: absolute; left: 0; top: 0; }
+        #feedback-display li.model-tip::before { content: '🤖'; position: absolute; left: 0; top: 0; }
+        #feedback-display li.info::before { content: 'ℹ️'; position: absolute; left: 0; top: 0; }
+        .points { font-weight: bold; color: #f1c40f; margin-left: 5px; }
+        .no-points { font-weight: bold; color: #e74c3c; margin-left: 5px; }
+
+        /* --- Wynik (bez zmian) --- */
+        #score-display { margin-top: 20px; font-size: 1.1em; color: #e67e22; text-shadow: 1px 1px #000; }
+
+        /* --- Ukrywanie Elementów (bez zmian) --- */
+        .hidden { display: none !important; }
+
+        /* --- Prosty Modal (bez zmian) --- */
+        .simple-modal { position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%); background-color: #f1c40f; color: #2c3e50; padding: 25px; border: 4px solid #ecf0f1; border-radius: 8px; z-index: 1000; font-family: "'Press Start 2P', cursive"; font-size: 0.8em; box-shadow: 0 0 15px rgba(0,0,0,0.6); max-width: 80%; text-align: center; }
+        .simple-modal button { font-size: 0.9em; margin-top: 20px; padding: 10px 18px; display: block; margin-left: auto; margin-right: auto; background-color: #2ecc71; color: #ffffff; border: 2px solid #27ae60; border-radius: 5px; cursor: pointer; }
+        .simple-modal button:hover { background-color: #27ae60; }
+
+        /* --- Style dla instrukcji na ekranie startowym (bez zmian) --- */
+        #start-screen ul { list-style-type: none; padding: 0; margin: 20px auto; max-width: 80%; text-align: left; font-size: 0.85em; }
+        #start-screen li { margin-bottom: 10px; padding-left: 30px; position: relative; }
+        #start-screen li::before { position: absolute; left: 0; top: 2px; font-size: 1.2em; }
+        #start-screen li:nth-child(1)::before { content: '📖'; } #start-screen li:nth-child(2)::before { content: '⌨️'; } #start-screen li:nth-child(3)::before { content: '📊'; } #start-screen li:nth-child(4)::before { content: '➡️'; }
+
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div id="start-screen">
+             <h1>⚡ Mistrz Promptów Energetycznych ⚡</h1>
+             <h2>Interaktywny Trening Prompt Engineeringu</h2>
+             <p>Witaj! Ta gra pomoże Ci opanować sztukę tworzenia skutecznych promptów dla modeli AI, skupiając się na tematyce transformacji energetycznej.</p>
+             <p>Nauczysz się różnych technik, od podstawowych po zaawansowane, i przećwiczysz je w praktyce.</p>
+             <h3>Jak Grać?</h3>
+             <ul>
+                 <li>Czytaj wyjaśnienie każdej techniki (z przykładami!).</li>
+                 <li>Wykonaj zadanie: napisz prompt, opisz proces lub wybierz najlepszą opcję.</li>
+                 <li>Sprawdź ocenę i wskazówki (zobaczysz, za co zdobywasz punkty!).</li>
+                 <li>Przejdź do następnej lekcji i zostań Mistrzem Promptów!</li>
+             </ul>
+             <button id="start-button">Rozpocznij Grę!</button>
+         </div>
+
+        <div id="game-container">
+            <div id="explanation-display" class="content-area"> <h3 id="explanation-title"></h3> <div id="explanation-text"></div> </div>
+             <div id="task-display" class="content-area"> <h3>Twoje Wyzwanie:</h3> <div id="task-text"></div> </div>
+             <div id="prompt-input-area"> <textarea id="prompt-input" placeholder="Wpisz swoją odpowiedź tutaj..."></textarea> </div>
+             <div id="choice-task-area"></div>
+             <div class="button-container"> <button id="proceed-button">Rozumiem, do wyzwania!</button> <button id="submit-button">Oceń Odpowiedź</button> <button id="next-button">Następna Lekcja</button> </div>
+             <div id="score-display">Wynik: 0</div>
+             <div id="feedback-display"> <h3>Analiza Odpowiedzi</h3> <ul id="feedback-list"></ul> </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Konfiguracja Gry ---
+        const scenarios = [
+            // Lekcje 1-7 (bez zmian w kodzie)
+             { id: 1, technique: "Zero-Shot Prompting (Instrukcja Bezpośrednia)", explanation: "<p>Zero-Shot to podstawowa forma: wydajesz bezpośrednią instrukcję bez wcześniejszych przykładów.</p><p>Kluczem jest maksymalna jasność, precyzja i dostarczenie całego niezbędnego kontekstu w instrukcji.</p><p>Przykład prostego promptu Zero-Shot:</p><div class='example-prompt'><code>Opisz krótko zasadę działania elektrowni wiatrowej.</code></div>", task: "Opisz krótko (1-2 zdania/pkt) 3 główne zalety wodoru jako paliwa w transporcie publicznym vs pojazdy bateryjne (BEV).", task_type: 'write_prompt', evaluation: (promptText, scenario)=>{ const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { task: 2, context: 4, format: 1 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` }); if (lowerPrompt.includes('opisz') || lowerPrompt.includes('wymień') || lowerPrompt.includes('przedstaw') || lowerPrompt.includes('podaj') || lowerPrompt.includes('porównaj zalety')) { feedback.push({ type: 'good', text: `Zadanie jest jasno określone (Task). <span class="points">(+${points.task} pkt)</span>` }); scoreIncrement += points.task; } else { feedback.push({ type: 'improve', text: 'Upewnij się, że jasno określasz zadanie, np. "Opisz...", "Wymień..." (Task).' }); } let contextScoreCheck = 0; if (lowerPrompt.includes('wodór') || lowerPrompt.includes('wodor') || lowerPrompt.includes('h2')) contextScoreCheck++; if (lowerPrompt.includes('zalety') || lowerPrompt.includes('korzyści') || lowerPrompt.includes('plusy')) contextScoreCheck++; if (lowerPrompt.includes('transport publiczny') || lowerPrompt.includes('komunikacj miejsk')) contextScoreCheck++; if (lowerPrompt.includes('porównaniu') || lowerPrompt.includes('względem') || lowerPrompt.includes('kontra') || lowerPrompt.includes('vs')) contextScoreCheck++; if (lowerPrompt.includes('elektryczn') || lowerPrompt.includes('bateryj') || lowerPrompt.includes('bev')) contextScoreCheck++; if (contextScoreCheck >= 4) { feedback.push({ type: 'good', text: `Bardzo dobrze! Zawarto kluczowe elementy kontekstu (wodór, zalety, transport, porównanie do BEV). <span class="points">(+${points.context} pkt)</span>` }); scoreIncrement += points.context; } else { feedback.push({ type: 'improve', text: `Brakuje kluczowych elementów kontekstu <span class="no-points">(-${points.context} pkt)</span>. W Zero-Shot musisz podać wszystko: co opisać (zalety wodoru), gdzie (transport publ.), i w jakim odniesieniu (vs BEV).` }); } if (lowerPrompt.includes('3') || lowerPrompt.includes('trzy') || lowerPrompt.includes('krótko') || lowerPrompt.includes('1-2 zdania') || lowerPrompt.includes('punkty') || lowerPrompt.includes('lista')) { feedback.push({ type: 'good', text: `Określono oczekiwany format/ilość (Format). <span class="points">(+${points.format} pkt)</span>` }); scoreIncrement += points.format; } else { feedback.push({ type: 'improve', text: 'Warto określić format odpowiedzi, np. "w 3 punktach", "krótko" (Format).' }); } feedback.push({ type: 'model-tip', text: 'W Zero-Shot precyzja jest najważniejsza. Unikaj niejasności.' }); return { feedback, scoreIncrement }; } },
+            { id: 2, technique: "Role Prompting (Persona)", explanation: "<p>Nadaj AI konkretną rolę (np. 'Jesteś ekspertem...'). Pomaga to dostosować styl i wiedzę.</p><p>Przykład:</p><div class='example-prompt'><code>Jako analityk rynku energii odnawialnej, wymień 3 kluczowe trendy w fotowoltaice na rok 2025.</code></div>", task: "Potrzebne są 3 krótkie, innowacyjne pomysły na społeczne projekty słoneczne w miastach, angażujące mieszkańców. Przygotuj propozycje przekonujące dla zarządu miasta.", task_type: 'write_prompt', evaluation: (promptText, scenario) => { const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { role: 4, task: 1, context: 2, format: 1 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` }); if (lowerPrompt.includes('jesteś') || lowerPrompt.includes('wcielasz się') || lowerPrompt.includes('jako analityk') || lowerPrompt.includes('twoja rola') || lowerPrompt.includes('jako ekspert') || lowerPrompt.includes('działaj jako')) { feedback.push({ type: 'good', text: `Świetnie! Zastosowałeś Role Prompting, definiując rolę AI. <span class="points">(+${points.role} pkt)</span>` }); scoreIncrement += points.role; } else { feedback.push({ type: 'improve', text: `Pamiętasz lekcję o Role Prompting? Brak zdefiniowanej roli <span class="no-points">(-${points.role} pkt)</span>. Spróbuj nadać AI rolę, np. "Jako doświadczony analityk OZE...".` }); } if (lowerPrompt.includes('wygeneruj') || lowerPrompt.includes('stwórz') || lowerPrompt.includes('podaj') || lowerPrompt.includes('przygotuj') || lowerPrompt.includes('zaproponuj')) { feedback.push({ type: 'good', text: `Jasno określone zadanie (Task). <span class="points">(+${points.task} pkt)</span>` }); scoreIncrement += points.task; } else { feedback.push({ type: 'improve', text: 'Pamiętaj o jasnym określeniu zadania (Task), np. "Wygeneruj...".' }); } let contextScore = 0; if (lowerPrompt.includes('słoneczn') || lowerPrompt.includes('fotowoltaik')) contextScore++; if (lowerPrompt.includes('społeczne') || lowerPrompt.includes('wspólnotowe')) contextScore++; if (lowerPrompt.includes('miast') || lowerPrompt.includes('miejskich')) contextScore++; if (lowerPrompt.includes('mieszkańc') || lowerPrompt.includes('obywatel')) contextScore++; if (lowerPrompt.includes('zarząd') || lowerPrompt.includes('przekonujące')) contextScore++; if (contextScore >= 3) { feedback.push({ type: 'good', text: `Dobrze uchwycony kontekst zadania. <span class="points">(+${points.context} pkt)</span>` }); scoreIncrement += points.context; } else { feedback.push({ type: 'improve', text: 'Dodaj więcej szczegółów kontekstowych (energia słoneczna, projekty społeczne, miasta, mieszkańcy, cel - przekonanie zarządu).' }); } if (lowerPrompt.includes('3') || lowerPrompt.includes('trzy') || lowerPrompt.includes('krótkie') || lowerPrompt.includes('pomysły') || lowerPrompt.includes('lista') || lowerPrompt.includes('punkty')) { feedback.push({ type: 'good', text: `Określono oczekiwany format/ilość (Format). <span class="points">(+${points.format} pkt)</span>` }); scoreIncrement += points.format; } else { feedback.push({ type: 'improve', text: 'Warto określić format odpowiedzi, np. "w 3 punktach" (Format).' }); } feedback.push({ type: 'model-tip', text: 'Role Prompting jest bardzo skuteczny we wszystkich modelach LLM.' }); return { feedback, scoreIncrement }; } },
+            { id: 3, technique: "Określanie Odbiorcy i Stylu", explanation: "<p>Precyzuj, dla kogo jest odpowiedź i w jakim stylu ma być napisana (np. prostym, technicznym, z analogiami).</p><p>Przykład:</p><div class='example-prompt'><code>Wyjaśnij działanie magazynu energii cieplnej prostym językiem, tak aby zrozumiało to dziecko w wieku 10 lat. Użyj porównania do termosu.</code></div>", task: "Wyjaśnij koncepcję 'inteligentnej sieci energetycznej' (smart grid). Celem jest przedstawienie jej korzyści na spotkaniu z mieszkańcami osiedla bez wiedzy technicznej. Jak byś to zrobił?", task_type: 'write_prompt', evaluation: (promptText, scenario) => { const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { audience: 3, style: 3, task: 1, context: 1 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` }); if (lowerPrompt.includes('bez wiedzy') || lowerPrompt.includes('laik') || lowerPrompt.includes('nietechniczn') || lowerPrompt.includes('prosty sposób') || lowerPrompt.includes('łatwy') || lowerPrompt.includes('zrozumiały') || lowerPrompt.includes('dla mieszkańców') || lowerPrompt.includes('dla laika')) { feedback.push({ type: 'good', text: `Świetnie! Określiłeś odbiorcę i/lub pożądany poziom prostoty. <span class="points">(+${points.audience} pkt)</span>` }); scoreIncrement += points.audience; } else { feedback.push({ type: 'improve', text: `W tej lekcji kluczowe jest określenie odbiorcy. Brak tego <span class="no-points">(-${points.audience} pkt)</span>. Sprecyzuj, że wyjaśnienie ma być proste, np. "dla osoby bez wiedzy technicznej".` }); } if (lowerPrompt.includes('analogii') || lowerPrompt.includes('porównania') || lowerPrompt.includes('przykład') || lowerPrompt.includes('metafory')) { feedback.push({ type: 'good', text: `Dobrze, że poprosiłeś o analogię/porównanie! <span class="points">(+${points.style} pkt)</span>` }); scoreIncrement += points.style; } else { feedback.push({ type: 'improve', text: `Warto poprosić o konkretny styl/narzędzie (np. analogię), aby ułatwić zrozumienie <span class="no-points">(-${points.style} pkt)</span>. Dodaj np. "Użyj analogii do...".` }); } if (lowerPrompt.includes('wyjaśnij') || lowerPrompt.includes('opisz') || lowerPrompt.includes('przedstaw')) { feedback.push({ type: 'good', text: `Zadanie wyjaśnienia jest jasne (Task). <span class="points">(+${points.task} pkt)</span>` }); scoreIncrement += points.task; } else { feedback.push({ type: 'improve', text: 'Określ jasno zadanie, np. "Wyjaśnij..." (Task).' }); } if (lowerPrompt.includes('inteligentnej sieci') || lowerPrompt.includes('smart grid')) { feedback.push({ type: 'good', text: `Wskazano temat wyjaśnienia (Context). <span class="points">(+${points.context} pkt)</span>` }); scoreIncrement += points.context; } else { feedback.push({ type: 'improve', text: 'Nie zapomnij wspomnieć o temacie: "inteligentna sieć energetyczna" (Context).' }); } feedback.push({ type: 'model-tip', text: 'Definiowanie odbiorcy jest ważne dla wszystkich modeli, ale szczególnie dla modeli kreatywnych jak Claude czy Gemini.' }); return { feedback, scoreIncrement }; } },
+            { id: 4, technique: "Precyzowanie Formatu i Długości", explanation: "<p>Określ format (np. lista punktowana, tabela, JSON) i długość (np. 2 zdania, 100 słów), aby dostać to, czego potrzebujesz.</p><p>Przykład:</p><div class='example-prompt'><code>Wymień 5 głównych źródeł energii odnawialnej w Polsce. Odpowiedź przedstaw w formie listy numerowanej, każde źródło w osobnym punkcie. Maksymalnie 50 słów łącznie.</code></div>", task: "Przygotuj chwytliwy argument marketingowy dla właścicieli domów o pompie ciepła (oszczędności, ekologia). Ma być zwięzły (ulotka/reklama online).", task_type: 'write_prompt', evaluation: (promptText, scenario) => { const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { length: 3, formatStyle: 2, task: 1, context: 2 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` }); if (lowerPrompt.includes('krótki') || lowerPrompt.includes('2-3 zdania') || lowerPrompt.includes('zwięźle') || lowerPrompt.includes('maksymalnie') || lowerPrompt.includes('nie więcej niż') || lowerPrompt.includes('kilka zdań') || lowerPrompt.includes('jedno zdanie')) { feedback.push({ type: 'good', text: `Świetnie! Określiłeś oczekiwaną długość/zwięzłość. <span class="points">(+${points.length} pkt)</span>` }); scoreIncrement += points.length; } else { feedback.push({ type: 'improve', text: `W tej lekcji ćwiczymy precyzowanie długości. Brak tego <span class="no-points">(-${points.length} pkt)</span>. Dodaj np. "maksymalnie 2-3 zdania", "bardzo zwięźle".` }); } if (lowerPrompt.includes('ulotce') || lowerPrompt.includes('tekst marketingowy') || lowerPrompt.includes('argument') || lowerPrompt.includes('punktowany') || lowerPrompt.includes('chwytliwy') || lowerPrompt.includes('reklama') || lowerPrompt.includes('hasło') || lowerPrompt.includes('lista')) { feedback.push({ type: 'good', text: `Dobrze, że zasugerowałeś format/styl. <span class="points">(+${points.formatStyle} pkt)</span>` }); scoreIncrement += points.formatStyle; } else { feedback.push({ type: 'improve', text: `Warto też określić format/styl <span class="no-points">(-${points.formatStyle} pkt)</span>, np. "jako tekst marketingowy", "w formie listy punktowanej".` }); } if (lowerPrompt.includes('napisz') || lowerPrompt.includes('stwórz') || lowerPrompt.includes('przygotuj')) { feedback.push({ type: 'good', text: `Jasno określone zadanie (Task). <span class="points">(+${points.task} pkt)</span>` }); scoreIncrement += points.task; } else { feedback.push({ type: 'improve', text: 'Określ zadanie, np. "Napisz argument..." (Task).' }); } let contextScore = 0; if (lowerPrompt.includes('pomp') || lowerPrompt.includes('ciepła')) contextScore++; if (lowerPrompt.includes('oszczędności') || lowerPrompt.includes('koszty')) contextScore++; if (lowerPrompt.includes('ekologi') || lowerPrompt.includes('środowisk')) contextScore++; if (lowerPrompt.includes('domu') || lowerPrompt.includes('właściciela')) contextScore++; if (contextScore >= 3) { feedback.push({ type: 'good', text: `Dobrze wskazane kluczowe argumenty i odbiorca (Context). <span class="points">(+${points.context} pkt)</span>` }); scoreIncrement += points.context; } else { feedback.push({ type: 'improve', text: 'Podkreśl kluczowe korzyści (oszczędności, ekologia) i temat (pompa ciepła) (Context).' }); } feedback.push({ type: 'model-tip', text: 'Precyzowanie formatu jest ważne dla wszystkich modeli, ale szczególnie pomocne przy generowaniu kodu lub danych strukturalnych.' }); return { feedback, scoreIncrement }; } },
+            { id: 5, technique: "Few-Shot Prompting (Uczenie na Przykładach)", explanation: "<p>Few-Shot: podaj AI kilka przykładów (shots) pożądanego wyniku PRZED zadaniem głównego pytania.</p><p>Pomaga AI zrozumieć oczekiwania, zwłaszcza przy niestandardowych formatach.</p><p>Przykład struktury:</p><div class='example-prompt'><code>Przykład 1: Produkt: Szybki Internet Światłowodowy, Hasło: Surfuj z prędkością światła!\nPrzykład 2: Produkt: Mobilna Aplikacja Bankowa, Hasło: Twój bank w kieszeni, zawsze pod ręką.\n\nZadanie: Wygeneruj 3 hasła dla produktu 'Inteligentny Termostat Domowy'.</code></div>", task: "Wygeneruj 3 krótkie, chwytliwe hasła reklamowe dla taryfy 'EkoPlus' (100% OZE, stała cena). Podaj najpierw 1-2 przykłady haseł w podobnym stylu.", task_type: 'write_prompt', evaluation: (promptText, scenario) => { const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { fewShot: 4, task: 1, context: 1 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` }); const exampleKeywords = ['przykład', 'np.', 'np:', 'hasło:', 'oto przykład', 'oto przykłady']; const mainTaskKeywords = ['wygeneruj', 'stwórz', 'podaj', 'ekoplus', 'zadanie:']; let foundExample = false; let exampleIndex = -1; let taskIndex = 10000; for (const keyword of exampleKeywords) { const idx = lowerPrompt.indexOf(keyword); if (idx !== -1) { foundExample = true; if (exampleIndex === -1 || idx < exampleIndex) { exampleIndex = idx; } } } for (const keyword of mainTaskKeywords) { const idx = lowerPrompt.indexOf(keyword); if (idx !== -1) { if (idx < taskIndex) { taskIndex = idx; } } } if (foundExample && taskIndex !== 10000 && exampleIndex < taskIndex) { feedback.push({ type: 'good', text: `Doskonale! Zastosowałeś Few-Shot, podając przykłady PRZED głównym zadaniem. <span class="points">(+${points.fewShot} pkt)</span>` }); scoreIncrement += points.fewShot; } else if (foundExample) { feedback.push({ type: 'improve', text: `Zauważyłem przykłady, ale upewnij się, że podajesz je PRZED głównym poleceniem (np. oddzielając je słowem "Zadanie:") <span class="no-points">(-${points.fewShot} pkt)</span>.` }); } else { feedback.push({ type: 'improve', text: `Pamiętasz lekcję o Few-Shot? Brak przykładów <span class="no-points">(-${points.fewShot} pkt)</span>. Spróbuj podać 1-2 przykłady haseł przed głównym poleceniem.` }); } if (taskIndex !== 10000 && (lowerPrompt.includes('3') || lowerPrompt.includes('trzy')) && lowerPrompt.includes('ekoplus')) { feedback.push({ type: 'good', text: `Główne zadanie jest obecne i jasne. <span class="points">(+${points.task} pkt)</span>` }); scoreIncrement += points.task; } else { feedback.push({ type: 'improve', text: 'Upewnij się, że w prompcie jest główne polecenie: wygenerowanie 3 haseł dla taryfy EkoPlus.' }); } let contextScore = 0; if (lowerPrompt.includes('hasła') || lowerPrompt.includes('slogany')) contextScore++; if (lowerPrompt.includes('reklamowe') || lowerPrompt.includes('chwytliwe')) contextScore++; if (lowerPrompt.includes('oze') || lowerPrompt.includes('odnawialn')) contextScore++; if (lowerPrompt.includes('stała cena')) contextScore++; if (contextScore >= 2) { feedback.push({ type: 'good', text: `Dobrze określony kontekst. <span class="points">(+${points.context} pkt)</span>` }); scoreIncrement += points.context; } else { feedback.push({ type: 'improve', text: 'Dodaj więcej kontekstu o tym, jakie mają być hasła i co wyróżnia taryfę (OZE, stała cena).' }); } feedback.push({ type: 'model-tip', text: 'Jakość i trafność przykładów w Few-Shot jest kluczowa.' }); return { feedback, scoreIncrement }; } },
+            { id: 6, technique: "Chain of Thought (CoT - Łańcuch Myśli)", explanation: "<p>CoT instruuje AI, aby myślało 'krok po kroku' lub pokazało proces rozumowania przed odpowiedzią. Poprawia to wyniki w zadaniach wymagających logiki, obliczeń, planowania.</p><p><b>Jak użyć?</b> Dodaj do promptu frazę typu:</p><ul><li>'Pomyśl krok po kroku.'</li><li>'Rozpisz swoje rozumowanie.'</li><li>'Pokaż obliczenia.'</li><li>'Przedstaw etapy dochodzenia do wniosku.'</li></ul><p>Nawet jeśli nie potrzebujesz widzieć tych kroków, samo polecenie ich wykonania może wewnętrznie pomóc modelowi uzyskać lepszy wynik.</p>", task: "Instalacja PV: dach 80 m², nasłonecznienie 1100 kWh/m²/rok, sprawność paneli 20%, sprawność systemu 85%. Jaka roczna produkcja energii w kWh? Pokaż rozumowanie krok po kroku.", task_type: 'write_prompt', evaluation: (promptText, scenario)=>{ const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { cot: 4, task: 1, context: 2 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` }); const cotKeywords = ['krok po kroku', 'rozumowanie', 'obliczenia', 'pokaż jak', 'rozpisz', 'etapy', 'myśl logicznie', 'przedstaw kroki', 'przeanalizujmy to', 'rozłóżmy']; let foundCoT = false; for (const keyword of cotKeywords) { if (lowerPrompt.includes(keyword)) { foundCoT = true; break; } } if (foundCoT) { feedback.push({ type: 'good', text: `Świetnie! Poprosiłeś AI o pokazanie rozumowania (CoT). <span class="points">(+${points.cot} pkt)</span>` }); scoreIncrement += points.cot; } else { feedback.push({ type: 'improve', text: `Pamiętasz lekcję o CoT? Brak prośby o pokazanie kroków <span class="no-points">(-${points.cot} pkt)</span>. Dodaj np. "Pokaż obliczenia krok po kroku.".` }); } let contextScoreCheck = 0; if (lowerPrompt.includes('roczna produkcja') || lowerPrompt.includes('energii') || lowerPrompt.includes('kwh')) contextScoreCheck++; if (lowerPrompt.includes('80 m') || lowerPrompt.includes('80m')) contextScoreCheck++; if (lowerPrompt.includes('1100')) contextScoreCheck++; if (lowerPrompt.includes('20%') || lowerPrompt.includes('0.2')) contextScoreCheck++; if (lowerPrompt.includes('85%') || lowerPrompt.includes('0.85')) contextScoreCheck++; if (lowerPrompt.includes('jaka będzie') || lowerPrompt.includes('oblicz') || lowerPrompt.includes('wylicz')) { feedback.push({ type: 'good', text: `Główne zadanie (obliczenie) jest jasne. <span class="points">(+${points.task} pkt)</span>` }); scoreIncrement += points.task; } else { feedback.push({ type: 'improve', text: 'Upewnij się, że jasno określasz główne zadanie: obliczenie rocznej produkcji energii.' }); } if (contextScoreCheck >= 4) { feedback.push({ type: 'good', text: `Wszystkie niezbędne dane zostały zawarte. <span class="points">(+${points.context} pkt)</span>` }); scoreIncrement += points.context; } else { feedback.push({ type: 'improve', text: 'Aby AI mogło wykonać obliczenia, musisz podać wszystkie dane: powierzchnię, nasłonecznienie, obie sprawności.' }); } feedback.push({ type: 'model-tip', text: 'CoT znacząco poprawia wyniki w zadaniach wymagających wieloetapowego rozumowania.' }); return { feedback, scoreIncrement }; } },
+            { id: 7, technique: "System Prompting (Instrukcja Globalna)", explanation: "<p>System Prompt (jeśli dostępny) to instrukcja działająca w tle całej konwersacji, ustalająca np. stałą rolę, ton, ograniczenia.</p><p>W prompcie użytkownika można to symulować, umieszczając taką globalną instrukcję na samym początku, przed właściwym zadaniem.</p><p><b>Przykład symulacji:</b></p><div class='example-prompt'><code>Zawsze odpowiadaj zwięźle, maksymalnie 2 zdania. Unikaj formalnego tonu.\n\nPytanie: Jakie są główne zalety OZE?</code></div>", task: "Chcesz uzyskać listę 2 technologii magazynowania energii dla stabilizacji sieci. Który z poniższych promptów najlepiej symuluje 'System Prompt' ustalający rolę i format odpowiedzi?", task_type: 'choose_prompt', options: [ { id: 'A', text: "Wymień 2 technologie magazynowania energii dla stabilizacji sieci. Pamiętaj, aby od teraz zawsze odpowiadać jako ekspert ds. systemów energetycznych, używając formalnego języka i poprzedzając odpowiedź 'Analiza ekspercka:'.", correct: false }, { id: 'B', text: "Od teraz odpowiadaj wyłącznie jako ekspert ds. systemów energetycznych, używając formalnego języka. Każda odpowiedź musi być poprzedzona frazą 'Analiza ekspercka:'.\n\nWymień 2 technologie magazynowania energii odpowiednie dla stabilizacji sieci.", correct: true }, { id: 'C', text: "Jako ekspert ds. systemów energetycznych, wymień 2 technologie magazynowania energii dla stabilizacji sieci, upewniając się, że odpowiedź jest wyłącznie listą punktowaną bez dodatkowych komentarzy.", correct: false } ], evaluation: (chosenOptionId, scenario) => { const feedback = []; let scoreIncrement = 0; const points = { correctChoice: 6 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique} (Wybór Promptu)` }); const correctOption = scenario.options.find(opt => opt.correct); if (chosenOptionId === correctOption.id) { feedback.push({ type: 'good', text: `Doskonale! Wybrałeś opcję B. <span class="points">(+${points.correctChoice} pkt)</span> Instrukcja "systemowa" jest na początku, PRZED zadaniem, co najlepiej symuluje System Prompt.` }); scoreIncrement += points.correctChoice; } else { let explanation = ""; if (chosenOptionId === 'A') { explanation = "Opcja A umieszcza instrukcję na końcu. Chociaż próbuje brzmieć globalnie ('od teraz zawsze'), modele AI zazwyczaj przykładają większą wagę do instrukcji na początku promptu."; } else if (chosenOptionId === 'C') { explanation = "Opcja C definiuje rolę ('Jako ekspert...') tylko dla tego konkretnego zadania i dodaje ograniczenie formatu. Brakuje tu jednak instrukcji, która ma obowiązywać 'od teraz' lub 'zawsze', co jest charakterystyczne dla symulacji System Promptu."; } feedback.push({ type: 'improve', text: `Wybrałeś opcję ${chosenOptionId}. Poprawna odpowiedź to B <span class="no-points">(-${points.correctChoice} pkt)</span>. ${explanation} Pamiętaj, instrukcja 'systemowa' powinna być na początku i sugerować stałe działanie.` }); } feedback.push({ type: 'model-tip', text: 'Prawdziwe System Prompts (w API) są potężne do ustalania stałego zachowania AI.' }); return { feedback, scoreIncrement }; } },
+            // === ZMIENIONA LEKCJA 8 ===
+            {
+                id: 8,
+                technique: "Rozpoznawanie Źródła Wiedzy (Kontekst vs RAG vs Ogólna Wiedza)",
+                explanation: "<p>Skąd AI bierze odpowiedzi? Może korzystać z:</p><ul><li><b>Ogólnej wiedzy:</b> Nauczonej podczas treningu (może być nieaktualna).</li><li><b>Dostarczonego kontekstu:</b> Tekstu podanego bezpośrednio w prompcie (jak w Contextual Prompting).</li><li><b>RAG (Retrieval-Augmented Generation):</b> Mechanizmu, gdzie AI najpierw *wyszukuje* relevantne informacje (np. w bazie danych, internecie), a potem używa ich jako *kontekstu* do odpowiedzi.</li><li><b>Halucynacji:</b> Zmyślonych informacji, gdy brakuje wiedzy.</li></ul><p>Zrozumienie źródła pomaga ocenić wiarygodność odpowiedzi. Jeśli potrzebujesz aktualnych lub specyficznych danych, polegaj na dostarczonym kontekście lub mechanizmach RAG.</p>",
+                task: `Rozważ pytanie zadane AI: <div class='context-snippet' style='text-align:center; margin-top: 5px; margin-bottom: 15px;'><code>"Jaka jest aktualna (na dzisiaj) cena referencyjna energii elektrycznej dla aukcji OZE w Polsce ogłoszona przez URE?"</code></div> Otrzymałeś odpowiedź: <div class='knowledge-source-output'><code>"Aktualna cena referencyjna dla większości technologii OZE w aukcjach na rok 2025 wynosi około 380 PLN/MWh, zgodnie z ostatnim rozporządzeniem Ministra Klimatu."</code></div> Jakie jest najbardziej prawdopodobne źródło tej (hipotetycznej) odpowiedzi AI?`,
+                task_type: 'identify_knowledge_source', // NOWY TYP ZADANIA
+                options: [ // Opcje do wyboru dla źródła wiedzy
+                    { id: 'A', text: "Ogólna wiedza modelu (oparta na danych treningowych, które mogą być nieaktualne).", correct: false },
+                    { id: 'B', text: "Kontekst dostarczony w (niewidocznym) prompcie lub wynik działania RAG (np. wyszukanie aktualnego rozporządzenia).", correct: true },
+                    { id: 'C', text: "Halucynacja / Błędna informacja (model wymyślił dane).", correct: false }
+                ],
+                evaluation: (chosenOptionId, scenario) => {
+                    const feedback = []; let scoreIncrement = 0;
+                    const points = { correctChoice: 6 };
+                    feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` });
+                    const correctOption = scenario.options.find(opt => opt.correct);
+
+                    if (chosenOptionId === correctOption.id) {
+                        feedback.push({ type: 'good', text: `Bardzo dobrze! Wybrałeś opcję B. <span class="points">(+${points.correctChoice} pkt)</span> Pytanie dotyczy bardzo aktualnych, specyficznych danych (cena referencyjna URE 'na dzisiaj'). Modele rzadko mają tak świeże dane w ogólnej wiedzy. Odpowiedź podająca konkretną kwotę i powołująca się na 'ostatnie rozporządzenie' silnie sugeruje, że AI otrzymało ten kontekst (np. przez RAG) lub został on podany w prompcie.` });
+                        scoreIncrement += points.correctChoice;
+                    } else {
+                        let explanation = "";
+                        if (chosenOptionId === 'A') { explanation = "Opcja A jest mało prawdopodobna, bo pytanie wymaga bardzo aktualnych danych, których model raczej nie ma w swojej ogólnej wiedzy treningowej."; }
+                        else if (chosenOptionId === 'C') { explanation = "Opcja C (halucynacja) jest możliwa, ale odpowiedź brzmi dość konkretnie i powołuje się na źródło (rozporządzenie). Bardziej prawdopodobne jest, że bazuje na jakimś (potencjalnie dostarczonym) kontekście."; }
+                         feedback.push({ type: 'improve', text: `Wybrałeś opcję ${chosenOptionId}. Poprawna odpowiedź to B <span class="no-points">(-${points.correctChoice} pkt)</span>. ${explanation} Kluczem jest aktualność i specyfika danych w pytaniu.` });
+                    }
+                    // Tips
+                    feedback.push({ type: 'model-tip', text: 'RAG to potężne narzędzie do zadawania pytań o aktualne lub specyficzne dane. Wiele systemów AI (jak Gemini z rozszerzeniami) używa go automatycznie.' });
+                    feedback.push({ type: 'model-tip', text: 'Zawsze krytycznie oceniaj odpowiedzi AI, zwłaszcza gdy dotyczą danych liczbowych, dat lub szybko zmieniających się informacji. Pytaj o źródła!' });
+                    return { feedback, scoreIncrement };
+                }
+            },
+            // === NOWA LEKCJA 9: Zarządzanie Kontekstem i Prośba o Doprecyzowanie ===
+             {
+                 id: 9,
+                 technique: "Zarządzanie Kontekstem i Prośba o Doprecyzowanie",
+                 explanation: "<p>Modele AI nie zawsze mają najświeższe dane lub dostęp do specyficznych informacji. Zamiast zakładać, że AI wie wszystko, dobrą praktyką jest:</p><ul><li>Dostarczanie kluczowego kontekstu (jak w lekcji 8).</li><li>LUB: Pytanie AI, czy ma potrzebne informacje lub czego potrzebuje.</li></ul><p><b>Jak pytać?</b><div class='example-prompt'><code>Potrzebuję analizy wpływu najnowszej dyrektywy UE XYZ na polski rynek OZE. Zanim zaczniesz, powiedz mi, czy masz dostęp do treści tej dyrektywy (opublikowanej w zeszłym tygodniu) i na jakich danych oprzesz swoją analizę?</code></div></p><p>To pomaga uniknąć odpowiedzi opartych na przestarzałych danych.</p>",
+                 task: "Masz za zadanie uzyskać od AI podsumowanie dotyczące najnowszych (z ostatniego miesiąca) zmian w polskich regulacjach prawnych dotyczących prosumentów OZE. Sformułuj prompt, który najpierw sprawdzi, czy AI ma dostęp do tak aktualnych danych lub czy potrzebuje dodatkowych informacji/kontekstu od Ciebie, zanim wygeneruje podsumowanie.",
+                 task_type: 'write_prompt',
+                 evaluation: (promptText, scenario) => {
+                     const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase();
+                     const points = { checkContext: 5, task: 2 };
+                     feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` });
+
+                     // Sprawdzenie prośby o weryfikację kontekstu/danych - KLUCZOWY
+                     const checkKeywords = ['czy masz dostęp', 'zanim zaczniesz', 'powiedz mi czy', 'potrzebujesz więcej informacji', 'na jakich danych', 'twoja wiedza obejmuje', 'sprawdź czy wiesz', 'czy posiadasz dane', 'czy wiesz o', 'czy dane są aktualne', 'potwierdź dostęp', 'bazując na czym'];
+                     let foundCheck = false;
+                     for (const keyword of checkKeywords) { if (lowerPrompt.includes(keyword)) { foundCheck = true; break; } }
+
+                     if (foundCheck) {
+                         feedback.push({ type: 'good', text: `Doskonale! Twój prompt proaktywnie sprawdza wiedzę AI lub pyta o potrzebny kontekst przed głównym zadaniem. <span class="points">(+${points.checkContext} pkt)</span>` });
+                         scoreIncrement += points.checkContext;
+                     } else {
+                         feedback.push({ type: 'improve', text: `W tej lekcji uczymy się pytać AI o jego wiedzę. Brak pytania sprawdzającego <span class="no-points">(-${points.checkContext} pkt)</span>. Spróbuj dodać np. "Zanim przygotujesz podsumowanie, powiedz mi, czy masz dostęp do danych z ostatniego miesiąca?"` });
+                     }
+
+                     // Sprawdzenie głównego zadania
+                     if (lowerPrompt.includes('podsumowanie') && lowerPrompt.includes('zmian') && (lowerPrompt.includes('regulacj') || lowerPrompt.includes('prawnych')) && lowerPrompt.includes('prosument') && (lowerPrompt.includes('ostatniego miesiąca') || lowerPrompt.includes('najnowszych'))) {
+                          feedback.push({ type: 'good', text: `Główne zadanie (podsumowanie najnowszych regulacji dla prosumentów) jest obecne. <span class="points">(+${points.task} pkt)</span>` });
+                          scoreIncrement += points.task;
+                     } else {
+                          feedback.push({ type: 'improve', text: 'Upewnij się, że w prompcie jasno określasz główne zadanie: podsumowanie najnowszych (z ostatniego miesiąca) regulacji dla prosumentów OZE.' });
+                     }
+
+                     // Tips
+                     feedback.push({ type: 'model-tip', text: 'Pytanie o źródła lub aktualność danych jest szczególnie ważne przy tematach szybko się zmieniających (prawo, technologia, wydarzenia).' });
+                     feedback.push({ type: 'model-tip', text: 'Jeśli AI odpowie, że nie ma danych, możesz je dostarczyć w kolejnym prompcie (Contextual Prompting).' });
+                     return { feedback, scoreIncrement };
+                 }
+             },
+            // Lekcja 10: Step-back Prompting
+            { id: 10, technique: "Step-back Prompting (Krok Wstecz dla Abstrakcji)", explanation: "<p>Step-back: poproś AI, aby najpierw cofnęło się i zastanowiło nad ogólnymi zasadami/definicjami związanymi z pytaniem, a dopiero potem odpowiedziało na samo pytanie.</p><p>Pomaga uzyskać bardziej ugruntowane odpowiedzi, unikając pochopnych wniosków.</p><p><b>Struktura:</b> Najpierw poproś o ogólne zasady/definicje, potem zadaj konkretne pytanie.</p><p>Przykład:</p><div class='example-prompt'><code>Zanim odpowiesz na pytanie o przyszłość samochodów elektrycznych, najpierw wyjaśnij ogólne czynniki wpływające na adopcję nowych technologii w transporcie.\n\nPytanie: Jaka jest Twoja prognoza udziału samochodów elektrycznych w rynku do 2035 roku?</code></div>", task: "Czy fuzja termojądrowa może stać się głównym źródłem energii do 2050? Zanim ocenisz szanse, zdefiniuj krótko fuzję i warunki dla 'głównego źródła' energii.", task_type: 'write_prompt', evaluation: (promptText, scenario)=>{ const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { stepBack: 4, bothParts: 2 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique}` }); const stepBackKeywords = ['zanim', 'najpierw zdefiniuj', 'przed oceną', 'zacznij od ogólnych zasad', 'cofnijmy się o krok', 'zdefiniuj fuzj', 'warunki dla głównego źródła', 'ogólne tło', 'szerszy kontekst', 'podstawowe zasady']; const specificQuestionKeywords = ['czy fuzja', 'termojądrowa', 'głównym źródłem', 'do 2050', 'ocenisz szanse']; let foundStepBackInstruction = false; let foundSpecificQuestion = false; let stepBackIndex = -1; let specificQuestionIndex = -1; for (const keyword of stepBackKeywords) { const idx = lowerPrompt.indexOf(keyword); if (idx !== -1) { foundStepBackInstruction = true; if (stepBackIndex === -1 || idx < stepBackIndex) stepBackIndex = idx; } } for (const keyword of specificQuestionKeywords) { const idx = lowerPrompt.indexOf(keyword); if (idx !== -1) { foundSpecificQuestion = true; if (specificQuestionIndex === -1 || idx < specificQuestionIndex) specificQuestionIndex = idx; } } if (foundStepBackInstruction && foundSpecificQuestion && stepBackIndex < specificQuestionIndex) { feedback.push({ type: 'good', text: `Doskonale! Zastosowałeś strukturę Step-back (ogólne zasady PRZED konkretnym pytaniem). <span class="points">(+${points.stepBack} pkt)</span>` }); scoreIncrement += points.stepBack; } else { feedback.push({ type: 'improve', text: `Pamiętasz o Step-back? Brak prośby o ogólne zasady PRZED głównym pytaniem <span class="no-points">(-${points.stepBack} pkt)</span>. Użyj np. "Zanim odpowiesz, zdefiniuj..."` }); } if (foundStepBackInstruction && foundSpecificQuestion) { feedback.push({ type: 'good', text: `Prompt zawiera obie części zadania (definicje i pytanie). <span class="points">(+${points.bothParts} pkt)</span>` }); scoreIncrement += points.bothParts; } else { feedback.push({ type: 'improve', text: 'Upewnij się, że prompt zawiera zarówno prośbę o definicje (step-back), jak i główne pytanie o fuzję.' }); } feedback.push({ type: 'model-tip', text: 'Step-back pomaga unikać pochopnych wniosków i ugruntować odpowiedzi.' }); return { feedback, scoreIncrement }; } },
+            // Lekcja 11: Self-Consistency
+            { id: 11, technique: "Self-Consistency (Spójność Wewnętrzna)", explanation: "<p>Self-Consistency: Generuj wiele ścieżek rozumowania (np. przez CoT z różnymi 'perspektywami'), wybierz najczęstszą odpowiedź. Zwiększa niezawodność.</p><p><b>Cel:</b> Uzyskanie bardziej wiarygodnej odpowiedzi przez porównanie wyników z różnych podejść.</p><p>Symulacja: Napisz prompt *zachęcający* do rozważenia problemu z różnych perspektyw lub różnymi metodami analizy.</p>", task: "Pytanie: '3 główne długoterminowe (>2050) wyzwania dla offshore wind?'. Sformułuj prompt zachęcający model do rozważenia problemu z różnych perspektyw/ścieżek rozumowania dla większej wiarygodności.", task_type: 'write_prompt', evaluation: (promptText, scenario) => { const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { consistencyPrompt: 4, task: 2 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique} (Konceptualna)` }); const consistencyKeywords = ['różne perspektywy', 'różne punkty widzenia', 'kilka sposobów', 'różne ścieżki', 'alternatywne podejścia', 'spójne wnioski', 'najbardziej prawdopodobne', 'rozważ różne aspekty', 'wieloma drogami', 'porównaj wyniki', 'sprawdź spójność', 'wiele metod']; let foundConsistencyPrompt = false; for (const keyword of consistencyKeywords) { if (lowerPrompt.includes(keyword)) { foundConsistencyPrompt = true; break; } } if (foundConsistencyPrompt) { feedback.push({ type: 'good', text: `Dobrze! Prompt zachęca do rozważenia problemu z różnych stron (idea Self-Consistency). <span class="points">(+${points.consistencyPrompt} pkt)</span>` }); scoreIncrement += points.consistencyPrompt; } else { feedback.push({ type: 'improve', text: `Pamiętasz ideę Self-Consistency? Brak zachęty do różnorodnego myślenia <span class="no-points">(-${points.consistencyPrompt} pkt)</span>. Dodaj np. "Przeanalizuj to z różnych punktów widzenia...".` }); } if (lowerPrompt.includes('wyzwania') && (lowerPrompt.includes('wiatrowej na morzu') || lowerPrompt.includes('offshore')) && (lowerPrompt.includes('długoterminowe') || lowerPrompt.includes('po 2050') || lowerPrompt.includes('>2050'))) { feedback.push({ type: 'good', text: `Główne zadanie jest jasno określone. <span class="points">(+${points.task} pkt)</span>` }); scoreIncrement += points.task; } else { feedback.push({ type: 'improve', text: 'Upewnij się, że jasno określasz główne pytanie: 3 długoterminowe wyzwania dla offshore wind.' }); } feedback.push({ type: 'model-tip', text: 'Prawdziwa Self-Consistency wymaga generowania wielu odpowiedzi i wyboru większościowej.' }); return { feedback, scoreIncrement }; } },
+            // Lekcja 12: Tree of Thoughts (ToT)
+            { id: 12, technique: "Tree of Thoughts (ToT - Drzewo Myśli)", explanation: "<p>ToT: Eksploruj wiele 'gałęzi' rozumowania, oceniaj je i wybieraj najlepszą ścieżkę, potencjalnie wracając (backtracking).</p><p>Przydatne w złożonym planowaniu i rozwiązywaniu problemów, gdzie jest wiele możliwych dróg.</p><p><b>Symulacja:</b> Poproś AI o rozważenie kilku opcji, ocenę ich potencjału/wad na danym etapie, a następnie wybór i rozwinięcie najbardziej obiecującej.</p>", task: "Opracuj strategię dekarbonizacji transportu ciężkiego w PL do 2060. Poprowadź AI przez proces ToT: zidentyfikuj opcje (np. elektryfikacja, H2, bio), oceń potencjał/wyzwania, wybierz 1-2 i rozwiń.", task_type: 'write_prompt', evaluation: (promptText, scenario) => { const feedback = []; let scoreIncrement = 0; const lowerPrompt = promptText.toLowerCase(); const points = { totStructure: 4, task: 2 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique} (Konceptualna)` }); const totKeywords = ['rozważ opcje', 'zidentyfikuj alternatywy', 'oceń każdą', 'porównaj potencjał', 'wybierz najlepsz', 'rozwiń najbardziej obiecując', 'drzewo możliwości', 'analiza wieloetapowa', 'plusy i minusy każdej opcji', 'rozgałęzienia', 'ewaluacja ścieżek', 'porównaj drogi']; const optionKeywords = ['elektryfikacja', 'wodór', 'biopaliwa', 'syntetyczne']; let foundTotStructurePrompt = false; let foundOptionsMention = false; let totKeywordCount = 0; for (const keyword of totKeywords) { if (lowerPrompt.includes(keyword)) totKeywordCount++; } for (const keyword of optionKeywords) { if (lowerPrompt.includes(keyword)) foundOptionsMention = true; } if (totKeywordCount >= 2 && foundOptionsMention) { feedback.push({ type: 'good', text: `Bardzo dobrze! Prompt instruuje AI, aby rozważyło opcje, oceniło je i wybrało (symulacja ToT). <span class="points">(+${points.totStructure} pkt)</span>` }); scoreIncrement += points.totStructure; } else { feedback.push({ type: 'improve', text: `Pamiętasz ideę ToT? Brak instrukcji do eksploracji i oceny opcji <span class="no-points">(-${points.totStructure} pkt)</span>. Poproś np. o: 1. Wymienienie opcji (elektryfikacja, H2...). 2. Ocenę ich. 3. Wybór i rozwinięcie najlepszej.` }); } if (lowerPrompt.includes('strategi') && lowerPrompt.includes('dekarbonizacj') && lowerPrompt.includes('transport ciężki') && (lowerPrompt.includes('polsce') || lowerPrompt.includes('polski')) && lowerPrompt.includes('2060')) { feedback.push({ type: 'good', text: `Główne zadanie jest jasno określone. <span class="points">(+${points.task} pkt)</span>` }); scoreIncrement += points.task; } else { feedback.push({ type: 'improve', text: 'Upewnij się, że jasno określasz główne zadanie: strategia dekarbonizacji transportu ciężkiego w PL do 2060.' }); } feedback.push({ type: 'model-tip', text: 'Pełna implementacja ToT wymaga złożonego systemu kontrolującego LLM.' }); return { feedback, scoreIncrement }; } },
+            // Lekcja 13: ReAct
+             { id: 13, technique: "ReAct (Reason & Act - Rozumowanie i Działanie)", explanation: "<p>ReAct łączy rozumowanie (Reasoning) z działaniem (Acting - używanie narzędzi np. search). Cykl: Myśl -> Akcja -> Obserwacja -> Myśl...</p><p>Kluczowy dla zadań wymagających aktualnych danych lub interakcji. Zadanie: Opisz ten proces.</p><p><b>Przykład opisu fragmentu cyklu:</b></p><div class='example-prompt'><code>Myśl: Muszę sprawdzić najnowsze regulacje dotyczące SMR w Polsce.\nAkcja: search(\"nowe przepisy SMR Polska 2025\")\nObserwacja: Znalazłem artykuł o nowelizacji ustawy X z dnia Y.\nMyśl: OK, muszę przeczytać tę nowelizację, aby znaleźć konkretne zmiany...</code></div>", task: "Agent AI (ReAct) ma odpowiedzieć: 'Jaki jest aktualny status prawny budowy SMR w Polsce?'. Opisz sekwencję kroków (Myśl -> Akcja -> Obserwacja -> Myśl...), jaką agent by podjął. Jakie 'narzędzie' (np. search) by użył?", task_type: 'describe_process', evaluation: (descriptionText, scenario) => { const feedback = []; let scoreIncrement = 0; const lowerDescription = descriptionText.toLowerCase(); const points = { reactCycle: 4, toolUse: 2, taskContext: 1 }; feedback.push({ type: 'info', text: `Testowana technika: ${scenario.technique} (Opis Procesu)` }); const thoughtKeywords = ['myśl:', 'myślę, że', 'plan:', 'strategia:', 'zastanawiam się']; const actionKeywords = ['akcja:', 'działanie:', 'użyj narzędzia', 'search[', 'wyszukaj:', 'google_search(']; const observationKeywords = ['obserwacja:', 'wynik:', 'znalazłem:', 'odpowiedź narzędzia:']; let thoughtCount = 0; let actionCount = 0; let observationCount = 0; thoughtKeywords.forEach(k => { thoughtCount += (lowerDescription.match(new RegExp(k.replace(/[\[\]\(\)]/g, '\\$&'), 'g')) || []).length; }); actionKeywords.forEach(k => { actionCount += (lowerDescription.match(new RegExp(k.replace(/[\[\]\(\)]/g, '\\$&'), 'g')) || []).length; }); observationKeywords.forEach(k => { observationCount += (lowerDescription.match(new RegExp(k.replace(/[\[\]\(\)]/g, '\\$&'), 'g')) || []).length; }); const usesTool = lowerDescription.includes('search[') || lowerDescription.includes('wyszukaj') || lowerDescription.includes('google_search(') || lowerDescription.includes('narzędzie wyszukiwania') || lowerDescription.includes('api') || lowerDescription.includes('bazy danych'); if (thoughtCount >= 1 && actionCount >= 1 && observationCount >= 1 && usesTool) { feedback.push({ type: 'good', text: `Doskonale! Opis poprawnie przedstawia cykl ReAct (Myśl -> Akcja -> Obserwacja) i wskazuje na użycie narzędzia (Akcja). <span class="points">(+${points.reactCycle + points.toolUse} pkt)</span>` }); scoreIncrement += points.reactCycle + points.toolUse; } else if (thoughtCount >= 1 && actionCount >= 1 && observationCount >= 1) { feedback.push({ type: 'improve', text: `Opis zawiera cykl Myśl-Akcja-Obserwacja <span class="points">(+${points.reactCycle} pkt)</span>, ale brakuje jasnego wskazania użycia narzędzia w Akcji <span class="no-points">(-${points.toolUse} pkt)</span>. Dodaj np. 'Akcja: search[aktualne przepisy SMR Polska]'.` }); scoreIncrement += points.reactCycle; } else { feedback.push({ type: 'improve', text: `Pamiętasz lekcję o ReAct? Brak pełnego cyklu Myśl-Akcja-Obserwacja w opisie <span class="no-points">(-${points.reactCycle + points.toolUse} pkt)</span>. Opisz sekwencję: 1. Myśl (plan), 2. Akcja (użycie narzędzia np. search), 3. Obserwacja (wynik), 4. Myśl (co dalej?).` }); } if (lowerDescription.includes('smr') || lowerDescription.includes('małe reaktory') || lowerDescription.includes('status prawny') || lowerDescription.includes('przepisy')) { feedback.push({ type: 'good', text: `Opis odnosi się do właściwego zadania (status prawny SMR). <span class="points">(+${points.taskContext} pkt)</span>` }); scoreIncrement += points.taskContext; } else { feedback.push({ type: 'improve', text: 'Upewnij się, że Twój opis procesu ReAct dotyczy zadanego pytania o status prawny SMR w Polsce.' }); } feedback.push({ type: 'model-tip', text: 'ReAct jest podstawą działania wielu nowoczesnych agentów AI.' }); return { feedback, scoreIncrement }; } },
+        ];
+
+        // --- Stan Gry (bez zmian) ---
+        let currentScenarioIndex = 0;
+        let score = 0;
+        let currentPhase = 'start';
+
+        // --- Elementy DOM (bez zmian) ---
+        const startScreen = document.getElementById('start-screen');
+        const gameContainer = document.getElementById('game-container');
+        const startButton = document.getElementById('start-button');
+        const explanationDisplay = document.getElementById('explanation-display');
+        const explanationTitle = document.getElementById('explanation-title');
+        const explanationText = document.getElementById('explanation-text');
+        const taskDisplay = document.getElementById('task-display');
+        const taskText = document.getElementById('task-text'); // Teraz div
+        const promptInputArea = document.getElementById('prompt-input-area');
+        const promptInput = document.getElementById('prompt-input');
+        const choiceTaskArea = document.getElementById('choice-task-area');
+        const proceedButton = document.getElementById('proceed-button');
+        const submitButton = document.getElementById('submit-button');
+        const nextButton = document.getElementById('next-button');
+        const feedbackDisplay = document.getElementById('feedback-display');
+        const feedbackList = document.getElementById('feedback-list');
+        const scoreDisplay = document.getElementById('score-display');
+
+        // --- Funkcje Gry (logika bez zmian, tylko drobne poprawki) ---
+
+        function initGame() { /* ... bez zmian ... */
+            startScreen.style.display = 'block'; gameContainer.style.display = 'none'; currentPhase = 'start'; score = 0; currentScenarioIndex = 0; updateScoreDisplay();
+         }
+        function startGame() { /* ... bez zmian ... */
+            startScreen.style.display = 'none'; gameContainer.style.display = 'block'; loadScenario(currentScenarioIndex);
+         }
+
+        function loadScenario(index) {
+            if (index < scenarios.length) {
+                const scenario = scenarios[index];
+                currentPhase = 'explanation';
+                explanationTitle.textContent = `Lekcja ${index + 1}/${scenarios.length}: ${scenario.technique}`;
+                explanationText.innerHTML = scenario.explanation;
+                taskText.innerHTML = scenario.task; // Używamy innerHTML
+
+                promptInputArea.style.display = 'none';
+                choiceTaskArea.style.display = 'none';
+                choiceTaskArea.innerHTML = '';
+
+                submitButton.classList.remove('react-submit', 'choice-submit', 'answer-submit');
+                if (scenario.task_type === 'describe_process') {
+                    promptInput.placeholder = "Opisz proces ReAct tutaj...";
+                    submitButton.textContent = "Oceń Opis";
+                    submitButton.classList.add('react-submit');
+                } else if (scenario.task_type === 'choose_prompt' || scenario.task_type === 'identify_knowledge_source') { // Obsługa obu typów wyboru
+                     submitButton.textContent = "Oceń Wybór";
+                     submitButton.classList.add('choice-submit');
+                } else if (scenario.task_type === 'answer_question_from_context') {
+                     promptInput.placeholder = "Wpisz odpowiedź opartą TYLKO na tekście...";
+                     submitButton.textContent = "Oceń Odpowiedź";
+                     submitButton.classList.add('answer-submit');
+                } else { // Domyślnie 'write_prompt'
+                    promptInput.placeholder = "Wpisz swój prompt tutaj...";
+                    submitButton.textContent = "Oceń Prompt";
+                }
+
+                explanationDisplay.style.display = 'flex';
+                taskDisplay.style.display = 'none';
+                feedbackDisplay.style.display = 'none';
+                feedbackList.innerHTML = '';
+                proceedButton.style.display = 'inline-block';
+                submitButton.style.display = 'none';
+                nextButton.style.display = 'none';
+                promptInput.value = '';
+                promptInput.disabled = false;
+            } else {
+                 showEndGameScreen();
+            }
+             updateScoreDisplay();
+        }
+
+        function showEndGameScreen() { /* ... bez zmian ... */
+             explanationDisplay.style.display = 'none'; taskDisplay.style.display = 'flex';
+             taskText.innerHTML = `🏆 Gratulacje Mistrzu Promptów! 🏆<br><br>Ukończyłeś wszystkie ${scenarios.length} lekcji.<br><br>Twój końcowy wynik: <span style="color: #f1c40f; font-size: 1.2em;">${score}</span> punktów!<br><br><small>Odśwież stronę, aby zagrać ponownie.</small>`;
+             promptInputArea.style.display = 'none'; choiceTaskArea.style.display = 'none'; feedbackDisplay.style.display = 'none'; proceedButton.style.display = 'none'; submitButton.style.display = 'none'; nextButton.style.display = 'none'; scoreDisplay.style.display = 'none';
+         }
+
+        function proceedToTask() {
+             currentPhase = 'task'; const scenario = scenarios[currentScenarioIndex];
+             explanationDisplay.style.display = 'none'; taskDisplay.style.display = 'flex';
+             // Pokaż odpowiedni obszar wprowadzania/wyboru
+             if (scenario.task_type === 'choose_prompt' || scenario.task_type === 'identify_knowledge_source') {
+                 promptInputArea.style.display = 'none';
+                 choiceTaskArea.style.display = 'block';
+                 renderChoiceOptions(scenario.options, scenario.task_type); // Przekaż typ zadania
+             } else { // Dla 'write_prompt', 'describe_process', 'answer_question_from_context'
+                 promptInputArea.style.display = 'block';
+                 choiceTaskArea.style.display = 'none';
+                 promptInput.focus();
+             }
+             proceedButton.style.display = 'none'; submitButton.style.display = 'inline-block'; nextButton.style.display = 'none';
+         }
+
+        // Zaktualizowano renderChoiceOptions, aby obsługiwać różne typy zadań wyboru
+        function renderChoiceOptions(options, taskType) {
+            choiceTaskArea.innerHTML = '';
+            const inputName = (taskType === 'identify_knowledge_source') ? 'knowledgeSourceChoice' : 'promptChoice'; // Różne nazwy grup radio
+            options.forEach(option => {
+                const div = document.createElement('div');
+                div.className = 'prompt-choice'; // Używamy tej samej klasy dla spójności
+                let labelContent = "";
+                if (taskType === 'identify_knowledge_source') {
+                    labelContent = escapeHtml(option.text); // Dla źródła wiedzy tylko tekst
+                } else { // Dla 'choose_prompt' pokazujemy preformatowany kod
+                     labelContent = `Opcja ${option.id}:<pre><code>${escapeHtml(option.text)}</code></pre>`;
+                }
+                div.innerHTML = `
+                    <input type="radio" id="choice-${option.id}" name="${inputName}" value="${option.id}">
+                    <label for="choice-${option.id}">${labelContent}</label>
+                `;
+                choiceTaskArea.appendChild(div);
+            });
+         }
+
+        function escapeHtml(unsafe) { /* ... bez zmian ... */
+            if (!unsafe) return ''; return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+         }
+
+        function evaluateResponse() {
+            const scenario = scenarios[currentScenarioIndex]; let userInput; let result;
+            // Logika pobierania danych wejściowych w zależności od typu zadania
+            if (scenario.task_type === 'choose_prompt' || scenario.task_type === 'identify_knowledge_source') {
+                const inputName = (scenario.task_type === 'identify_knowledge_source') ? 'knowledgeSourceChoice' : 'promptChoice';
+                const selectedOption = document.querySelector(`input[name="${inputName}"]:checked`);
+                if (!selectedOption) { showSimpleMessage('Wybierz jedną z opcji przed oceną!'); return; }
+                userInput = selectedOption.value;
+                result = scenario.evaluation(userInput, scenario);
+            } else { // 'write_prompt', 'describe_process', 'answer_question_from_context'
+                userInput = promptInput.value.trim();
+                if (!userInput) { const message = scenario.task_type === 'describe_process' ? 'Wpisz swój opis procesu!' : (scenario.task_type === 'answer_question_from_context' ? 'Wpisz swoją odpowiedź!' : 'Wpisz swój prompt!'); showSimpleMessage(message); return; }
+                result = scenario.evaluation(userInput, scenario);
+            }
+            // Reszta logiki oceny i wyświetlania feedbacku bez zmian
+            if (result.scoreIncrement > 0) { score += result.scoreIncrement; updateScoreDisplay(); }
+            feedbackList.innerHTML = ''; result.feedback.forEach(item => { const li = document.createElement('li'); li.classList.add(item.type); li.innerHTML = item.text; feedbackList.appendChild(li); });
+            feedbackDisplay.style.display = 'block'; submitButton.style.display = 'none'; promptInput.disabled = true; document.querySelectorAll('input[name="promptChoice"], input[name="knowledgeSourceChoice"]').forEach(radio => radio.disabled = true);
+            if (currentScenarioIndex < scenarios.length - 1) { nextButton.style.display = 'inline-block'; } else { nextButton.style.display = 'none'; setTimeout(() => { showEndGameScreen(); }, 1500); }
+        }
+
+        function nextLesson() { /* ... bez zmian ... */
+            currentScenarioIndex++; loadScenario(currentScenarioIndex);
+         }
+        function updateScoreDisplay() { /* ... bez zmian ... */
+             scoreDisplay.textContent = `Wynik: ${score}`;
+         }
+        function showSimpleMessage(message) { /* ... bez zmian ... */
+            const existingModal = document.querySelector('.simple-modal'); if (existingModal) { document.body.removeChild(existingModal); } const modal = document.createElement('div'); modal.className = 'simple-modal'; modal.innerHTML = message.replace(/\n/g, '<br>'); const closeButton = document.createElement('button'); closeButton.textContent = 'OK'; closeButton.onclick = () => { if (document.body.contains(modal)) { document.body.removeChild(modal); } }; modal.appendChild(closeButton); document.body.appendChild(modal); closeButton.focus();
+         }
+
+        // --- Inicjalizacja Gry (bez zmian) ---
+        startButton.addEventListener('click', startGame);
+        proceedButton.addEventListener('click', proceedToTask);
+        submitButton.addEventListener('click', evaluateResponse);
+        nextButton.addEventListener('click', nextLesson);
+        window.onload = () => { initGame(); };
+
+    </script>
+</body>
+</html>
