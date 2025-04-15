@@ -1,421 +1,189 @@
-# Mistrz Promptów - Architecture Document
+# Prompt Engineering E-Learning Platform: Unified Architecture
 
-## Overview
+## 1. User Flow Overview
 
-This document outlines the architecture for "Mistrz Promptów" - a Polish prompt engineering learning application. The application is designed to teach users prompt engineering techniques through interactive lessons, focusing on energy-related topics.
-
-## System Architecture
-
-The application follows a modular architecture with clear separation of concerns, optimized for GitHub Pages deployment while leveraging Firebase for backend functionality.
-
-### High-Level Architecture Diagram
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Client Application                        │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────┐  │
-│  │ UI Module   │  │ Learning    │  │ Assessment  │  │ User    │  │
-│  │             │  │ Module      │  │ Module      │  │ Module  │  │
-│  └─────┬───────┘  └──────┬──────┘  └──────┬──────┘  └────┬────┘  │
-│        │                 │                │               │       │
-│        └─────────────────┼────────────────┼───────────────┘       │
-│                          │                │                       │
-└──────────────────────────┼────────────────┼───────────────────────┘
-                           │                │
-                           ▼                ▼
-          ┌────────────────────────────────────────────┐
-          │              Firebase Services             │
-          │  ┌─────────────┐  ┌─────────────────────┐  │
-          │  │ Firestore   │  │ Firebase Auth       │  │
-          │  │ Database    │  │                     │  │
-          │  └─────────────┘  └─────────────────────┘  │
-          │  ┌─────────────┐  ┌─────────────────────┐  │
-          │  │ Firebase    │  │ Firebase Hosting    │  │
-          │  │ Functions   │  │ (GitHub Pages)      │  │
-          │  └─────────────┘  └─────────────────────┘  │
-          └────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A[Landing Page] --> B[Main Screen / Instructions]
+    B --> C[Game Component]
+    C --> D[Game Completion]
+    D --> E[Leaderboard]
+    E -->|Restart| B
+    E -->|Exit| A
+    B -->|View Leaderboard| E
+    B -->|Start Game| C
 ```
 
-## Core Modules
+**Description:**
 
-### 1. UI Module
+- Users arrive at the Landing Page.
+- They proceed to the Main Screen, which provides clear instructions and navigation.
+- From there, users can start the Game or view the Leaderboard.
+- Upon game completion, users see their results and can view the Leaderboard or restart.
 
-Responsible for the presentation layer and user interaction.
+---
 
-**Components:**
+## 2. Component Hierarchy
 
-- **Theme System**: Responsive design with support for light/dark modes and various device sizes
-- **Navigation**: Menu system for moving between different sections
-- **Accessibility Layer**: Ensuring the application is accessible to all users
-- **Offline UI**: Visual indicators and functionality for offline mode
-
-**Technical Implementation:**
-
-- HTML5, CSS3 with responsive design principles
-- CSS variables for theming
-- Flexbox/Grid for layout
-- Media queries for device adaptation
-
-### 2. Learning Module
-
-Manages the educational content and learning progression.
-
-**Components:**
-
-- **Lesson Manager**: Loads and displays lesson content
-- **Content Renderer**: Formats and displays educational content
-- **Progress Tracker**: Tracks user progress through lessons
-- **Example System**: Provides interactive examples of prompt techniques
-
-**Technical Implementation:**
-
-- Modular JavaScript for lesson loading
-- Content stored in Firestore with local caching
-- Offline-first approach with IndexedDB backup
-- Lazy loading of lesson content
-
-### 3. Assessment Module
-
-Handles evaluation of user responses and provides feedback.
-
-**Components:**
-
-- **Prompt Evaluator**: Evaluates user-created prompts
-- **Scoring System**: Calculates scores based on prompt quality
-- **Feedback Generator**: Provides detailed feedback on user submissions
-- **Leaderboard Manager**: Manages and displays user rankings
-
-**Technical Implementation:**
-
-- Client-side evaluation logic with predefined criteria
-- Firestore integration for storing results
-- Batch processing for offline submissions
-- Conflict resolution for synchronization
-
-### 4. User Module
-
-Manages user accounts, authentication, and personalization.
-
-**Components:**
-
-- **Authentication Manager**: Handles user login/registration
-- **Profile Manager**: Manages user profiles and preferences
-- **Progress Synchronization**: Syncs user progress across devices
-- **Settings Controller**: Manages user application settings
-
-**Technical Implementation:**
-
-- Firebase Authentication with email/password and social login options
-- Secure user data storage in Firestore
-- Local storage for offline user data
-- JWT token management
-
-## Data Architecture
-
-### Database Schema
-
-**Firestore Collections:**
-
-1. **users**
-
-   ```
-   {
-     uid: string,
-     displayName: string,
-     email: string,
-     createdAt: timestamp,
-     lastLogin: timestamp,
-     preferences: {
-       theme: string,
-       language: string,
-       notifications: boolean
-     }
-   }
-   ```
-
-2. **user_progress**
-
-   ```
-   {
-     userId: string,
-     lessonId: string,
-     completed: boolean,
-     score: number,
-     attempts: number,
-     lastAttemptAt: timestamp,
-     responses: [
-       {
-         promptId: string,
-         userResponse: string,
-         score: number,
-         feedback: array
-       }
-     ]
-   }
-   ```
-
-3. **leaderboard**
-
-   ```
-   {
-     userId: string,
-     displayName: string,
-     totalScore: number,
-     completedLessons: number,
-     lastUpdated: timestamp
-   }
-   ```
-
-4. **lesson_content**
-   ```
-   {
-     lessonId: string,
-     title: string,
-     technique: string,
-     explanation: string,
-     tasks: [
-       {
-         taskId: string,
-         type: string,
-         content: string,
-         options: array,
-         evaluationCriteria: object
-       }
-     ],
-     order: number,
-     difficulty: string
-   }
-   ```
-
-### Local Storage
-
-For offline functionality, the application will use:
-
-- **IndexedDB**: For storing lesson content, user progress, and pending submissions
-- **LocalStorage**: For user preferences and session information
-- **Cache API**: For caching static assets and content
-
-## Integration Architecture
-
-### Firebase Integration
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Client Application                       │
-└───────────────────────────────┬─────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     Firebase SDK Layer                       │
-└───────┬─────────────────┬──────────────────┬────────────────┘
-        │                 │                  │
-        ▼                 ▼                  ▼
-┌───────────────┐ ┌───────────────┐ ┌────────────────┐
-│ Authentication│ │ Firestore     │ │ Functions      │
-└───────────────┘ └───────────────┘ └────────────────┘
+```mermaid
+graph TD
+    App
+    App --> Router
+    Router --> LandingPage
+    Router --> MainScreen
+    Router --> Game
+    Router --> Leaderboard
+    App --> UserContextProvider
+    App --> FirebaseProvider
+    Game --> GameUI
+    Game --> GameLogic
+    Game --> GameState
+    Leaderboard --> LeaderboardList
+    Leaderboard --> LeaderboardEntry
+    MainScreen --> Instructions
+    MainScreen --> Navigation
 ```
 
-**Implementation Details:**
+**Key Components:**
 
-- Firebase SDK initialization in a dedicated module
-- Service layer for abstracting Firebase operations
-- Retry mechanisms for failed operations
-- Batch processing for synchronization
-- Security rules enforcement on client-side
+- **App**: Root component, wraps providers and router.
+- **Router**: Handles navigation between pages.
+- **UserContextProvider**: Manages authentication and user state.
+- **FirebaseProvider**: Supplies Firebase services (auth, db).
+- **LandingPage**: Welcome and branding.
+- **MainScreen**: Instructions and navigation.
+- **Game**: Core gameplay logic and UI.
+- **Leaderboard**: Displays user rankings.
 
-## Security Architecture
+---
 
-### Authentication & Authorization
+## 3. Data Flow & State Management
 
-- **User Authentication**: Firebase Authentication with email/password and optional social logins
-- **Role-Based Access**: Admin roles for content management
-- **Token Management**: Secure handling of authentication tokens
+- **Global State**: Managed via React Context (`UserContext`, `GameContext`).
+- **Game State**: Local to Game component, synced to Firebase on completion.
+- **Leaderboard Data**: Fetched from Firebase Firestore, cached in context for performance.
+- **Navigation State**: Managed by React Router.
 
-### Data Security
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant UserContext
+    participant GameContext
+    participant Firebase
 
-- **Firestore Rules**: Granular access control based on user roles and ownership
-- **Input Validation**: Client and server-side validation of all user inputs
-- **Data Encryption**: Sensitive data encrypted at rest and in transit
-- **Rate Limiting**: Protection against abuse through Firebase Functions
-
-### Firestore Security Rules
-
-```
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // User data - only accessible by the user
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // User progress - only accessible by the user
-    match /user_progress/{progressId} {
-      allow read, write: if request.auth != null &&
-                          request.auth.uid == resource.data.userId;
-    }
-
-    // Leaderboard - readable by all, writable by admin
-    match /leaderboard/{entry} {
-      allow read: if true;
-      allow write: if request.auth.token.admin == true;
-    }
-
-    // Lesson content - readable by all, writable by admin
-    match /lesson_content/{lesson} {
-      allow read: if true;
-      allow write: if request.auth.token.admin == true;
-    }
-  }
-}
+    User->>UI: Interacts (clicks, inputs)
+    UI->>UserContext: Auth requests
+    UserContext->>Firebase: Auth API
+    UI->>GameContext: Start Game
+    GameContext->>UI: Game state updates
+    GameContext->>Firebase: Save results
+    UI->>Firebase: Fetch leaderboard
+    Firebase->>UI: Leaderboard data
 ```
 
-## Offline Capabilities
+---
 
-### Offline Strategy
+## 4. Firebase Integration
 
-1. **Content Caching**:
+- **Authentication**: Email/password, Google, or anonymous sign-in.
+- **Firestore**: Stores user progress, game results, leaderboard entries.
+- **Security**: Follows rules in `firestore.rules` and `security-plan.md`.
+- **Leaderboard**: Aggregates scores, supports pagination and real-time updates.
 
-   - Lesson content cached in IndexedDB
-   - Static assets cached via Service Worker
-   - Prefetching of likely-to-be-needed content
+**Integration Points:**
 
-2. **Offline Operations**:
+- `src/firebase/` for config and utility functions.
+- Context providers abstract Firebase logic from UI components.
 
-   - Complete lessons without internet connection
-   - Store results locally
-   - Queue submissions for synchronization
+---
 
-3. **Synchronization**:
+## 5. Responsive Design Considerations
 
-   - Background sync when connection is restored
-   - Conflict resolution for concurrent changes
-   - Progress indicators for sync status
+- Use CSS-in-JS or CSS modules for scoped, maintainable styles.
+- Flexbox/Grid layouts for adaptive UI.
+- Media queries for mobile/tablet/desktop breakpoints.
+- Touch-friendly controls and accessible navigation.
 
-4. **Graceful Degradation**:
-   - Fallback UI for unavailable features
-   - Clear user messaging about offline status
-   - Prioritization of core functionality
+---
 
-## Responsive Design
-
-### Device Support Strategy
-
-1. **Responsive Breakpoints**:
-
-   - Mobile: 320px - 480px
-   - Tablet: 481px - 768px
-   - Desktop: 769px+
-
-2. **Adaptive Components**:
-
-   - Flexible layouts using CSS Grid/Flexbox
-   - Component reorganization based on screen size
-   - Touch-friendly UI elements for mobile
-
-3. **Performance Optimization**:
-   - Image optimization for different devices
-   - Reduced animations on low-power devices
-   - Lazy loading of non-critical content
-
-## Deployment Architecture
-
-### GitHub Pages Deployment
+## 6. Proposed Project Structure
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Local          │     │  GitHub         │     │  GitHub Pages   │
-│  Development    │────▶│  Repository     │────▶│  Hosting        │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                                                        │
-                                                        ▼
-                                               ┌─────────────────┐
-                                               │  Firebase       │
-                                               │  Services       │
-                                               └─────────────────┘
+src/
+  components/
+    LandingPage/
+    MainScreen/
+      Instructions.js
+      Navigation.js
+    Game/
+      GameUI.js
+      GameLogic.js
+      GameState.js
+    Leaderboard/
+      LeaderboardList.js
+      LeaderboardEntry.js
+  context/
+    UserContext.js
+    GameContext.js
+    FirebaseProvider.js
+  firebase/
+    firebase-config.js
+    firestore-utils.js
+    auth-utils.js
+  utils/
+    validation.js
+    crypto.js
+  styles/
+    main.css
+    variables.css
+  App.js
+  index.js
+  service-worker.js
+public/
+  index.html
+  favicon.ico
+docs/
+  architecture.md
+  user-guide.md
+  developer-documentation.md
+  ...
 ```
 
-**Implementation Requirements:**
+---
 
-- Static file deployment compatible with GitHub Pages
-- Environment-based configuration for development/production
-- Build process for optimizing assets
-- CDN integration for improved performance
+## 7. Navigation & UX Patterns
 
-### CI/CD Pipeline
+- **Landing Page**: Branding, login/register, CTA to start.
+- **Main Screen**: Instructions, navigation to game/leaderboard.
+- **Game**: Clear progress indicators, feedback, pause/quit options.
+- **Leaderboard**: Sortable, filterable, highlights current user.
+- **Header/Footer**: Consistent navigation, responsive layout.
 
-1. **Build Process**:
+---
 
-   - Linting and code quality checks
-   - Bundling and minification
-   - Asset optimization
-   - Environment configuration injection
+## 8. Security & Privacy
 
-2. **Testing**:
+- No secrets in client code; use environment variables.
+- Firestore rules restrict access to authenticated users.
+- User data is only accessible to the user and for leaderboard aggregation.
 
-   - Unit tests for core functionality
-   - Integration tests for Firebase interaction
-   - Accessibility testing
-   - Cross-browser compatibility testing
+---
 
-3. **Deployment**:
-   - Automated deployment to GitHub Pages
-   - Firebase configuration deployment
-   - Cache invalidation
-   - Deployment verification
+## 9. Extensibility
 
-## Error Handling & Monitoring
+- Modular component structure allows for easy addition of new games or learning modules.
+- Context and provider pattern supports scalable state management.
+- Firebase abstraction enables swapping backend if needed.
 
-### Error Management
+---
 
-1. **Client-Side Errors**:
+## 10. Diagram Legend
 
-   - Global error boundary
-   - Graceful degradation
-   - User-friendly error messages
-   - Automatic retry for transient errors
+- **Rectangles**: Components or pages
+- **Arrows**: Navigation or data flow
+- **Providers**: Context/state wrappers
 
-2. **Server-Side Errors**:
+---
 
-   - Firebase Functions error handling
-   - Structured error responses
-   - Rate limiting and circuit breaking
-
-3. **Monitoring**:
-   - Error logging to Firebase Analytics
-   - Performance monitoring
-   - User behavior tracking
-   - Alerting for critical issues
-
-## Implementation Roadmap
-
-### Phase 1: Foundation
-
-- Setup project structure
-- Implement core UI components
-- Configure Firebase integration
-- Establish authentication flow
-
-### Phase 2: Core Functionality
-
-- Implement Learning Module
-- Develop Assessment Module
-- Create basic User Module
-- Setup offline capabilities
-
-### Phase 3: Enhancement
-
-- Implement Leaderboard
-- Add advanced feedback mechanisms
-- Optimize for performance
-- Enhance responsive design
-
-### Phase 4: Finalization
-
-- Comprehensive testing
-- Security audit
-- Documentation
-- Deployment to production
-
-## Conclusion
-
-This architecture provides a solid foundation for building the "Mistrz Promptów" application. It emphasizes modularity, security, offline capabilities, and responsive design while leveraging Firebase for backend functionality. The implementation should follow this architecture to ensure a scalable, maintainable, and user-friendly application.
+This architecture ensures a unified, maintainable, and scalable e-learning platform for prompt engineering, with a focus on user experience, robust data management, and clear project organization.

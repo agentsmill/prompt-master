@@ -37,7 +37,7 @@ You will learn various techniques, from basic to advanced, and practice them in 
   },
 };
 
-function HomePage() {
+function LandingPage() {
   const [lang, setLang] = useState(
     () => localStorage.getItem("mp_lang") || "pl"
   );
@@ -49,8 +49,7 @@ function HomePage() {
   }, [lang]);
 
   const handleNewGame = () => {
-    console.log("Navigating to /lessons/1");
-    navigate("/lessons/1");
+    navigate("/main"); // Go to MainScreen per new architecture
   };
 
   return (
@@ -93,4 +92,4 @@ function HomePage() {
   );
 }
 
-export default HomePage;
+export default LandingPage;

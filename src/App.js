@@ -17,14 +17,10 @@ import Footer from "./components/layout/Footer";
 import LoadingScreen from "./components/common/LoadingScreen";
 
 // Pages
-import HomePage from "./components/pages/HomePage";
-import LessonsPage from "./components/pages/LessonsPage";
-import LessonDetailPage from "./components/pages/LessonDetailPage";
-import ProfilePage from "./components/pages/ProfilePage";
-import LeaderboardPage from "./components/pages/LeaderboardPage";
-import LoginPage from "./components/pages/LoginPage";
-import RegisterPage from "./components/pages/RegisterPage";
-import NotFoundPage from "./components/pages/NotFoundPage";
+import LandingPage from "./components/LandingPage/LandingPage";
+import MainScreen from "./components/MainScreen/MainScreen";
+import Game from "./components/Game/Game";
+import Leaderboard from "./components/Leaderboard/Leaderboard";
 import MonitoringDashboard from "./components/admin/MonitoringDashboard";
 
 // Context
@@ -63,39 +59,10 @@ function App() {
               <Header />
               <main className="main-content">
                 <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/lessons" element={<LessonsPage />} />
-                  <Route
-                    path="/lessons/:lessonId"
-                    element={<LessonDetailPage />}
-                  />
-                  <Route
-                    path="/profile"
-                    element={user ? <ProfilePage /> : <Navigate to="/login" />}
-                  />
-                  <Route path="/leaderboard" element={<LeaderboardPage />} />
-                  <Route
-                    path="/login"
-                    element={!user ? <LoginPage /> : <Navigate to="/profile" />}
-                  />
-                  <Route
-                    path="/register"
-                    element={
-                      !user ? <RegisterPage /> : <Navigate to="/profile" />
-                    }
-                  />
-                  <Route
-                    path="/admin/monitoring"
-                    element={
-                      user &&
-                      user.email === process.env.REACT_APP_ADMIN_EMAIL ? (
-                        <MonitoringDashboard />
-                      ) : (
-                        <Navigate to="/" />
-                      )
-                    }
-                  />
-                  <Route path="*" element={<NotFoundPage />} />
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/main" element={<MainScreen />} />
+                  <Route path="/game" element={<Game />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
                 </Routes>
               </main>
               <Footer />
