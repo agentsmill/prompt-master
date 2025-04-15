@@ -6,9 +6,14 @@ const CopyPlugin = require("copy-webpack-plugin");
 module.exports = (env, argv) => {
   const isProduction = argv.mode === "production";
 
-  // Get the repository name from package.json for GitHub Pages deployment
+  // Get the public URL from package.json for deployment
   const packageJson = require("./package.json");
-  const repoName = packageJson.homepage.split("/").pop();
+  // Handle both GitHub Pages and custom domains
+  const publicUrl = packageJson.homepage || "";
+  // Extract the path part for GitHub Pages or use empty string for custom domains
+  const pathPrefix = publicUrl.includes("github.io")
+    ? `/${publicUrl.split("/").pop()}/`
+    : "/";
 
   return {
     entry: "./src/index.js",
@@ -16,7 +21,7 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, "dist"),
       filename: "[name].[contenthash].js",
       clean: true,
-      publicPath: isProduction ? `/${repoName}/` : "/",
+      publicPath: isProduction ? pathPrefix : "/",
     },
     module: {
       rules: [
