@@ -19,7 +19,7 @@
       "sizes": "512x512"
     }
   ],
-  "start_url": ".",
+  "start_url": "./index.html",
   "display": "standalone",
   "theme_color": "#2c3e50",
   "background_color": "#ffffff",
@@ -34,14 +34,14 @@
       "name": "Lekcje",
       "short_name": "Lekcje",
       "description": "Przeglądaj dostępne lekcje",
-      "url": "/lessons",
+      "url": "./lessons",
       "icons": [{ "src": "shortcuts/lessons.png", "sizes": "96x96" }]
     },
     {
       "name": "Profil",
       "short_name": "Profil",
       "description": "Twój profil i postępy",
-      "url": "/profile",
+      "url": "./profile",
       "icons": [{ "src": "shortcuts/profile.png", "sizes": "96x96" }]
     }
   ]

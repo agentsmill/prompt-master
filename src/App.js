@@ -8,6 +8,9 @@ import {
 import { auth } from "./firebase/firebase-config";
 import { onAuthStateChanged } from "firebase/auth";
 
+// Import monitoring system
+import initializeMonitoring from "./monitoring/monitoring-setup";
+
 // Core components
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
@@ -22,6 +25,7 @@ import LeaderboardPage from "./components/pages/LeaderboardPage";
 import LoginPage from "./components/pages/LoginPage";
 import RegisterPage from "./components/pages/RegisterPage";
 import NotFoundPage from "./components/pages/NotFoundPage";
+import MonitoringDashboard from "./components/admin/MonitoringDashboard";
 
 // Context
 import { UserProvider } from "./context/UserContext";
@@ -38,6 +42,11 @@ function App() {
       setLoading(false);
     });
 
+    // Initialize monitoring system
+    if (process.env.NODE_ENV === "production") {
+      initializeMonitoring();
+    }
+
     return () => unsubscribe();
   }, []);
 
@@ -49,7 +58,7 @@ function App() {
     <NetworkStatusProvider>
       <ThemeProvider>
         <UserProvider value={{ user }}>
-          <Router>
+          <Router basename={process.env.PUBLIC_URL}>
             <div className="app-container">
               <Header />
               <main className="main-content">
@@ -73,6 +82,17 @@ function App() {
                     path="/register"
                     element={
                       !user ? <RegisterPage /> : <Navigate to="/profile" />
+                    }
+                  />
+                  <Route
+                    path="/admin/monitoring"
+                    element={
+                      user &&
+                      user.email === process.env.REACT_APP_ADMIN_EMAIL ? (
+                        <MonitoringDashboard />
+                      ) : (
+                        <Navigate to="/" />
+                      )
                     }
                   />
                   <Route path="*" element={<NotFoundPage />} />

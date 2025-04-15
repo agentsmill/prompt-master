@@ -1,20 +1,10 @@
+<!-- This file was moved from index.html to game.html to avoid conflicts with GitHub Pages deployment -->
 <!DOCTYPE html>
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Redirect to the correct location based on deployment environment -->
-    <script>
-      // Check if we're on GitHub Pages
-      if (window.location.hostname.includes("github.io")) {
-        window.location.href =
-          window.location.pathname.replace(/\/$/, "") + "/index.html";
-      } else {
-        // Local development or custom domain
-        window.location.href = "./dist/index.html";
-      }
-    </script>
-    <title>Mistrz Promptów - Przekierowanie</title>
+    <title>Gra E-learningowa: Mistrz Promptów Energetycznych</title>
     <style>
       body {
         font-family: "Arial", sans-serif;
@@ -48,23 +38,30 @@
       p {
         margin-bottom: 20px;
       }
-      a {
-        color: #3498db;
+      .button {
+        display: inline-block;
+        font-family: "Arial", sans-serif;
+        background-color: #e67e22;
+        color: #ffffff;
+        border: 2px solid #d35400;
+        padding: 12px 25px;
+        cursor: pointer;
+        border-radius: 8px;
+        font-size: 1em;
         text-decoration: none;
+        margin-top: 20px;
       }
-      a:hover {
-        text-decoration: underline;
+      .button:hover {
+        background-color: #d35400;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>⚡ Mistrz Promptów ⚡</h1>
-      <p>Przekierowywanie do aplikacji...</p>
-      <p>
-        Jeśli nie zostałeś przekierowany automatycznie,
-        <a href="./dist/index.html">kliknij tutaj</a>.
-      </p>
+      <h1>⚡ Mistrz Promptów Energetycznych ⚡</h1>
+      <p>Ta gra została przeniesiona do głównej aplikacji.</p>
+      <p>Kliknij poniższy przycisk, aby przejść do aplikacji:</p>
+      <a href="/" class="button">Przejdź do aplikacji</a>
     </div>
   </body>
 </html>
