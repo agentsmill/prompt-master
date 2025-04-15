@@ -40,7 +40,7 @@ jobs:
           FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
           NODE_ENV: production
-          PUBLIC_URL: /mistrz-promptow
+          # Since we're using HashRouter, we don't need to set PUBLIC_URL
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
@@ -61,6 +61,9 @@ jobs:
         with:
           name: build-artifacts
           path: dist/
+
+      - name: Create .nojekyll file
+        run: touch dist/.nojekyll
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4

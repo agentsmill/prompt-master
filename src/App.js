@@ -58,7 +58,7 @@ function App() {
     <NetworkStatusProvider>
       <ThemeProvider>
         <UserProvider value={{ user }}>
-          <Router basename={process.env.PUBLIC_URL}>
+          <Router>
             <div className="app-container">
               <Header />
               <main className="main-content">

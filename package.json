@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A Polish interactive learning application for teaching prompt engineering techniques",
   "main": "src/index.js",
-  "homepage": "https://username.github.io/mistrz-promptow",
+  "homepage": "https://agentsmill.github.io/mistrz-promptow",
   "scripts": {
     "start": "webpack serve --mode development",
     "build": "webpack --mode production",

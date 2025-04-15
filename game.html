@@ -61,7 +61,14 @@
       <h1>⚡ Mistrz Promptów Energetycznych ⚡</h1>
       <p>Ta gra została przeniesiona do głównej aplikacji.</p>
       <p>Kliknij poniższy przycisk, aby przejść do aplikacji:</p>
-      <a href="/" class="button">Przejdź do aplikacji</a>
+      <a href="#/" class="button" id="app-link">Przejdź do aplikacji</a>
+      <script>
+        // Update the app link based on the environment
+        document.getElementById("app-link").href =
+          window.location.hostname.includes("github.io")
+            ? "/" + window.location.pathname.split("/")[1] // GitHub Pages: /repository-name
+            : "/"; // Local development
+      </script>
     </div>
   </body>
 </html>

@@ -10,10 +10,9 @@ module.exports = (env, argv) => {
   const packageJson = require("./package.json");
   // Handle both GitHub Pages and custom domains
   const publicUrl = packageJson.homepage || "";
-  // Extract the path part for GitHub Pages or use empty string for custom domains
-  const pathPrefix = publicUrl.includes("github.io")
-    ? `/${publicUrl.split("/").pop()}/`
-    : "/";
+  // For GitHub Pages, we're using HashRouter which doesn't need a path prefix
+  // since the hash part of the URL is client-side only
+  const pathPrefix = "/";
 
   return {
     entry: "./src/index.js",
@@ -73,6 +72,7 @@ module.exports = (env, argv) => {
         patterns: [
           { from: "public", to: "" }, // Copy static assets
           { from: "src/service-worker.js", to: "service-worker.js" },
+          { from: ".nojekyll", to: ".nojekyll" }, // Copy .nojekyll file to prevent Jekyll processing
         ],
       }),
     ],

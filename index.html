@@ -7,8 +7,13 @@
     <script>
       // Check if we're on GitHub Pages
       if (window.location.hostname.includes("github.io")) {
-        window.location.href =
-          window.location.pathname.replace(/\/$/, "") + "/index.html";
+        // For GitHub Pages, redirect to the root of the repository
+        // Remove any trailing slashes and ensure we don't append index.html
+        const basePath = window.location.pathname
+          .split("/")
+          .slice(0, -1)
+          .join("/");
+        window.location.href = basePath || "/";
       } else {
         // Local development or custom domain
         window.location.href = "./dist/index.html";
@@ -63,8 +68,15 @@
       <p>Przekierowywanie do aplikacji...</p>
       <p>
         Jeśli nie zostałeś przekierowany automatycznie,
-        <a href="./dist/index.html">kliknij tutaj</a>.
+        <a href="/" id="manual-redirect">kliknij tutaj</a>.
       </p>
+      <script>
+        // Update the manual redirect link based on the environment
+        document.getElementById("manual-redirect").href =
+          window.location.hostname.includes("github.io")
+            ? "/" + window.location.pathname.split("/")[1] // GitHub Pages: /repository-name
+            : "./dist/index.html"; // Local development
+      </script>
     </div>
   </body>
 </html>
