@@ -1,0 +1,28 @@
+[
+  {
+    "id": "solar_optimization",
+    "title": "Solar Panel Optimization",
+    "description": "Craft a prompt to help optimize solar panel placement for a community solar installation. You have access to data on sun angles, weather patterns, and terrain. Objective: Maximize energy production.",
+    "type": "zero-shot",
+    "domain": "SolarEnergy",
+    "parameters": {
+      "location": "44.9778° N, 93.2650° W",
+      "annual_sunshine_hours": "2711",
+      "average_cloud_cover": "45%",
+      "terrain": "flat, open field with no shading"
+    }
+  },
+  {
+    "id": "wind_startup",
+    "title": "Wind Turbine Startup",
+    "description": "Write a zero-shot prompt to guide the setup of a new wind turbine farm. Consider wind speed, direction, and proximity to the grid. Objective: Ensure optimal placement and startup efficiency.",
+    "type": "zero-shot",
+    "domain": "WindEnergy",
+    "parameters": {
+      "average_wind_speed": "7.5 m/s",
+      "wind_direction": "W-NW",
+      "distance_to_grid": "2 km",
+      "site_topography": "rolling hills"
+    }
+  }
+]

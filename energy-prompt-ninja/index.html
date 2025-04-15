@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Energy Prompt Ninja</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/pixel.css" />
+    <style>
+      body {
+        background: #181c1f;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+      }
+      #game-container {
+        margin-top: 32px;
+        box-shadow: 0 0 24px #0ff2, 0 0 4px #fff4;
+        border-radius: 8px;
+        background: #22282c;
+        padding: 16px;
+      }
+      canvas {
+        image-rendering: pixelated;
+        background: #181c1f;
+        border: 2px solid #44e0ff;
+        border-radius: 4px;
+        display: block;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #ffec70;
+        font-family: "Press Start 2P", monospace, sans-serif;
+        text-shadow: 2px 2px 0 #000, 0 0 8px #ffec70aa;
+        margin-bottom: 0.5em;
+      }
+    </style>
+    <!-- Pixel font for retro look -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <h1>⚡ Energy Prompt Ninja ⚡</h1>
+    <div id="game-container">
+      <canvas id="game-canvas" width="480" height="320"></canvas>
+    </div>
+    <script type="module" src="js/core/GameEngine.js"></script>
+  </body>
+</html>

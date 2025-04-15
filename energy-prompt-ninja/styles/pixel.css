@@ -1,0 +1,76 @@
+/* Pixel Art Energy-Themed Palette & UI Styles */
+
+:root {
+  /* Energy Colors */
+  --solar-yellow: #ffe066;
+  --wind-blue: #44e0ff;
+  --hydro-blue: #1e90ff;
+  --battery-green: #7fff6a;
+  --grid-gray: #b0b8c1;
+  --background-dark: #181c1f;
+  --accent-orange: #ffb347;
+  --error-red: #ff4e4e;
+  --success-green: #3cff9b;
+  --text-white: #f8f8ff;
+}
+
+body {
+  font-family: "Press Start 2P", monospace, sans-serif;
+  background: var(--background-dark);
+  color: var(--text-white);
+  margin: 0;
+}
+
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: var(--background-dark);
+  border: 2px solid var(--wind-blue);
+  box-shadow: 0 0 16px var(--wind-blue), 0 0 2px #fff4;
+}
+
+.energy-bar {
+  height: 12px;
+  background: linear-gradient(90deg, var(--solar-yellow), var(--battery-green));
+  border: 1px solid var(--grid-gray);
+  border-radius: 2px;
+  margin: 4px 0;
+}
+
+.energy-flow {
+  color: var(--wind-blue);
+  text-shadow: 0 0 4px var(--wind-blue);
+}
+
+.status-success {
+  color: var(--success-green);
+}
+
+.status-error {
+  color: var(--error-red);
+}
+
+.pixel-btn {
+  font-family: inherit;
+  font-size: 1em;
+  padding: 6px 18px;
+  background: var(--solar-yellow);
+  color: #222;
+  border: 2px solid var(--grid-gray);
+  border-radius: 4px;
+  box-shadow: 2px 2px 0 #0008;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.pixel-btn:hover {
+  background: var(--accent-orange);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  background: #222;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--wind-blue);
+  border-radius: 4px;
+}
