@@ -13,27 +13,58 @@
         flex-direction: column;
         align-items: center;
         min-height: 100vh;
+        font-family: "Press Start 2P", monospace, sans-serif; /* Apply font globally */
+        color: #f8f8ff; /* Default text color */
       }
       #game-container {
-        margin-top: 32px;
+        margin-top: 24px; /* Reduced margin */
         box-shadow: 0 0 24px #0ff2, 0 0 4px #fff4;
         border-radius: 8px;
         background: #22282c;
         padding: 16px;
+        display: flex; /* Use flexbox for layout */
+        flex-direction: column; /* Stack canvas and input vertically */
+        align-items: center; /* Center items */
       }
       canvas {
         image-rendering: pixelated;
         background: #181c1f;
-        border: 2px solid #44e0ff;
+        border: 2px solid var(--energy-blue); /* Use CSS variable */
         border-radius: 4px;
         display: block;
-        margin: 0 auto;
+        /* margin: 0 auto; Removed, handled by flexbox */
       }
       h1 {
-        color: #ffec70;
+        color: var(--energy-yellow); /* Use CSS variable */
         font-family: "Press Start 2P", monospace, sans-serif;
         text-shadow: 2px 2px 0 #000, 0 0 8px #ffec70aa;
         margin-bottom: 0.5em;
+        margin-top: 1em; /* Add some top margin */
+      }
+      #prompt-controls {
+        margin-top: 16px; /* Space between canvas and controls */
+        display: flex;
+        align-items: center; /* Align items vertically */
+        width: 100%; /* Take full width of container */
+        max-width: 480px; /* Match canvas width */
+      }
+      #prompt-input {
+        flex-grow: 1; /* Allow textarea to grow */
+        margin-right: 8px;
+        padding: 8px;
+        font-family: inherit; /* Use body font */
+        font-size: 0.9em;
+        border: 2px solid var(--grid-gray);
+        border-radius: 4px;
+        background: #33383c;
+        color: var(--text-white);
+        min-height: 40px; /* Minimum height */
+        resize: vertical; /* Allow vertical resize */
+      }
+      /* Add styles for pixel-btn if not fully covered in pixel.css */
+      .pixel-btn {
+        /* Styles from pixel.css are likely sufficient */
+        flex-shrink: 0; /* Prevent button from shrinking */
       }
     </style>
     <!-- Pixel font for retro look -->
@@ -46,7 +77,17 @@
     <h1>⚡ Energy Prompt Ninja ⚡</h1>
     <div id="game-container">
       <canvas id="game-canvas" width="480" height="320"></canvas>
+      <!-- Prompt Input Area -->
+      <div id="prompt-controls">
+        <textarea
+          id="prompt-input"
+          rows="2"
+          placeholder="Enter your zero-shot prompt here..."
+        ></textarea>
+        <button id="submit-prompt" class="pixel-btn">Submit</button>
+      </div>
     </div>
-    <script type="module" src="js/core/GameEngine.js"></script>
+    <!-- Load the UI script which will initialize the GameEngine -->
+    <script type="module" src="js/core/ui.js"></script>
   </body>
 </html>
