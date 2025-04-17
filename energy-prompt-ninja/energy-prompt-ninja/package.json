@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "energy-prompt-ninja": "file:.."
+  }
+}

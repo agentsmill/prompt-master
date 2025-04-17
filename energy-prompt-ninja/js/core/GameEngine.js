@@ -3,9 +3,17 @@
  * Follows modular architecture per EnergyPromptNinja_Specification.md
  */
 import { EnergyConversionModule } from "../modules/EnergyConversionModule.js";
+// TODO: Import other modules when created
+import { RolePromptingModule } from "../modules/RolePromptingModule.js";
+import { SystemPromptingModule } from "../modules/SystemPromptingModule.js";
+import { ContextualPromptingModule } from "../modules/ContextualPromptingModule.js";
+import { StepBackPromptingModule } from "../modules/StepBackPromptingModule.js";
+import { CoTPromptingModule } from "../modules/CoTPromptingModule.js";
+import { SelfConsistencyPromptingModule } from "../modules/SelfConsistencyPromptingModule.js";
+import { ToTPromptingModule } from "../modules/ToTPromptingModule.js";
 
 export class GameEngine {
-  constructor(canvasId) {
+  constructor(canvasId, onGameOver) {
     this.canvas = document.getElementById(canvasId);
     if (!this.canvas) {
       console.error(
@@ -17,6 +25,12 @@ export class GameEngine {
     this.lastTimestamp = 0;
     this.running = false;
     this.statusMessage = "Initializing..."; // Initial status
+    this.score = 0; // Initialize score
+    this.gameTimeLimit = 60; // Example: 60 seconds time limit
+    this.elapsedTime = 0; // Track elapsed time
+    this.onGameOver = onGameOver; // Store the callback
+    this.playerLevel = 1; // Start at level 1
+    this.completedModules = new Set(); // Track completed module names
 
     // Core systems (placeholders for future expansion)
     this.modules = {};
@@ -28,11 +42,99 @@ export class GameEngine {
   }
 
   initModules() {
-    // Initialize and register all game modules here
-    this.modules["EnergyConversion"] = new EnergyConversionModule(this);
-    // Add other modules here later (e.g., ScenarioValidator, UnitConverterUI)
-    this.activeModule = this.modules["EnergyConversion"];
-    this.statusMessage = this.activeModule?.statusMessage || "Ready."; // Get initial status from module if available
+    console.log(`Initializing modules for player level: ${this.playerLevel}`);
+    // Initialize all potentially available modules
+    this.modules = {}; 
+    this.modules["EnergyConversion"] = new EnergyConversionModule(this); // Covers Level 1 & 2 for now
+    // Add placeholders for other modules when created
+    this.modules["RolePrompting"] = new RolePromptingModule(this); // Level 3
+    this.modules["SystemPrompting"] = new SystemPromptingModule(this); // Level 4
+    this.modules["ContextualPrompting"] = new ContextualPromptingModule(this); // Level 5
+    this.modules["StepBackPrompting"] = new StepBackPromptingModule(this); // Level 6
+    this.modules["CoTPrompting"] = new CoTPromptingModule(this); // Level 7
+    this.modules["SelfConsistencyPrompting"] = new SelfConsistencyPromptingModule(this); // Level 8
+    this.modules["ToTPrompting"] = new ToTPromptingModule(this); // Level 9
+
+    // Set the active module based on player level or progression
+    this.activeModule = null; // Reset before selecting
+    let targetModuleName = null;
+    let statusIfNotImplemented = "Module Not Implemented Yet";
+
+    switch (this.playerLevel) {
+        case 1:
+            if (!this.completedModules.has("EnergyConversionModule")) targetModuleName = "EnergyConversion";
+            break;
+        case 2:
+            if (!this.completedModules.has("FewShotModule")) targetModuleName = "EnergyConversion"; // Still handled by EnergyConversion
+            break;
+        case 3:
+            if (!this.completedModules.has("RolePromptingModule")) targetModuleName = "RolePrompting";
+            statusIfNotImplemented = "Role Prompting Module (Not Implemented)";
+            break;
+        case 4:
+             if (!this.completedModules.has("SystemPromptingModule")) targetModuleName = "SystemPrompting";
+             statusIfNotImplemented = "System Prompting Module (Not Implemented)";
+            break;
+        case 5:
+             if (!this.completedModules.has("ContextualPromptingModule")) targetModuleName = "ContextualPrompting";
+             statusIfNotImplemented = "Contextual Prompting Module (Not Implemented)";
+            break;
+        case 6:
+             if (!this.completedModules.has("StepBackPromptingModule")) targetModuleName = "StepBackPrompting";
+              statusIfNotImplemented = "Step-Back Prompting Module (Not Implemented)";
+            break;
+        case 7:
+             if (!this.completedModules.has("CoTPromptingModule")) targetModuleName = "CoTPrompting";
+             statusIfNotImplemented = "Chain of Thought Module (Not Implemented)";
+            break;
+        case 8:
+            if (!this.completedModules.has("SelfConsistencyPromptingModule")) targetModuleName = "SelfConsistencyPrompting";
+             statusIfNotImplemented = "Self-Consistency Module (Not Implemented)";
+            break;
+        case 9:
+            if (!this.completedModules.has("ToTPromptingModule")) targetModuleName = "ToTPrompting";
+            statusIfNotImplemented = "Tree of Thoughts Module (Not Implemented)";
+            break;
+        default:
+            console.log(`Player level ${this.playerLevel} not recognized or all modules completed.`);
+            break;
+    }
+
+    if (targetModuleName && this.modules[targetModuleName]) {
+        this.activeModule = this.modules[targetModuleName];
+        // Special handling for level 2 still within EnergyConversion module
+        if (this.playerLevel === 2 && this.activeModule instanceof EnergyConversionModule) {
+             if (this.activeModule) this.activeModule.init(); // Re-init EnergyConversion for level 2 scenarios
+        }
+    } else if (targetModuleName) {
+        // Module should be active but isn't implemented/instantiated yet
+        console.log(`Attempting to activate ${targetModuleName} module (Level ${this.playerLevel}).`);
+        this.statusMessage = statusIfNotImplemented; 
+        this.activeModule = null; // Ensure no module is active
+    } else {
+        // Fallback or all modules completed
+        console.log("No specific module found for current level/state, falling back or ending.");
+        if (this.allModulesCompleted()) { // Check if all defined modules are done
+             console.log("All implemented modules completed.");
+             this.statusMessage = "Congratulations! All current challenges completed!";
+             // this.gameOver(); // Optionally end game here
+         } else {
+            // Fallback to first module if something went wrong
+            this.activeModule = this.modules["EnergyConversion"];
+         }
+    }
+
+    if (this.activeModule) {
+        this.statusMessage = this.activeModule?.statusMessage || "Ready.";
+        console.log(`Active module set to: ${this.activeModule.constructor.name}`);
+        // Ensure the newly activated module is also reset if needed
+        if (typeof this.activeModule.reset === "function") {
+            this.activeModule.reset();
+        }
+    } else {
+        this.statusMessage = "Error: No active module found!";
+        console.error("Could not set an active module.");
+    }
   }
 
   start() {
@@ -54,10 +156,20 @@ export class GameEngine {
     this.update(delta);
     this.render();
 
-    window.requestAnimationFrame(this.loop.bind(this));
+    // Check for game over condition *after* update/render
+    if (this.running && this.elapsedTime >= this.gameTimeLimit) {
+      this.gameOver();
+    }
+
+    if (this.running) { // Only request next frame if still running
+        window.requestAnimationFrame(this.loop.bind(this));
+    }
   }
 
   update(delta) {
+    // Update elapsed time
+    this.elapsedTime += delta;
+
     // Update the active game module
     if (this.activeModule && typeof this.activeModule.update === "function") {
       this.activeModule.update(delta);
@@ -91,6 +203,17 @@ export class GameEngine {
       this.ctx.restore();
     }
 
+    // Render Score and Timer
+    this.ctx.save();
+    this.ctx.font = '12px "Press Start 2P", monospace';
+    this.ctx.fillStyle = "var(--text-white)";
+    this.ctx.textAlign = "left";
+    this.ctx.fillText(`Score: ${this.score}`, 10, 20);
+    const timeLeft = Math.max(0, this.gameTimeLimit - Math.floor(this.elapsedTime));
+    this.ctx.textAlign = "right";
+    this.ctx.fillText(`Time: ${timeLeft}`, this.canvas.width - 10, 20);
+    this.ctx.restore();
+
     // Optionally render engine-level status (e.g., FPS, global messages)
     // For now, module handles its own status rendering within its render method
   }
@@ -121,6 +244,113 @@ export class GameEngine {
   stop() {
     this.running = false;
     console.log("GameEngine stopped.");
+  }
+
+  // Method to add points to the score
+  addScore(points) {
+    this.score += points;
+    console.log(`Score updated: ${this.score}`);
+    // Potentially update a score display element if needed immediately
+  }
+
+  // Reset game state for a new game
+  reset() {
+    console.log("Resetting GameEngine state...");
+    this.score = 0;
+    this.elapsedTime = 0;
+    this.statusMessage = "Ready.";
+    this.running = false; // Ensure it's stopped before restarting
+    // TODO: Reset active module state as well
+    if (this.activeModule && typeof this.activeModule.reset === "function") {
+      this.activeModule.reset();
+    } else {
+      // If no reset, re-initialize modules (simpler approach)
+      this.initModules();
+    }
+    console.log("GameEngine reset complete.");
+  }
+
+  // Handle game over logic
+  gameOver() {
+    console.log("Game Over!");
+    this.stop(); // Stop the game loop
+    // Call the callback provided by ui.js
+    if (typeof this.onGameOver === "function") {
+      this.onGameOver(this.score);
+    }
+  }
+
+  /**
+   * Called by modules when they are completed.
+   * Handles level progression and switching active modules.
+   * @param {string} moduleName - The name (or class name) of the completed module.
+   */
+  moduleCompleted(moduleName) {
+    console.log(`Module reported as completed: ${moduleName}`);
+    this.completedModules.add(moduleName);
+
+    // --- Level Progression Logic --- 
+    // Level up after completing the first module (Zero-Shot)
+    if (moduleName === "EnergyConversionModule" && this.playerLevel === 1) {
+        this.playerLevel = 2;
+        console.log(`Player leveled up to Level ${this.playerLevel}! Now focusing on Few-Shot.`);
+    // Level up after completing the second module (Few-Shot)
+    } else if (moduleName === "FewShotModule" && this.playerLevel === 2) {
+        this.playerLevel = 3;
+        console.log(`Player leveled up to Level ${this.playerLevel}! Now focusing on Role Prompting.`);
+    } else if (moduleName === "RolePromptingModule" && this.playerLevel === 3) {
+        this.playerLevel = 4;
+        console.log(`Player leveled up to Level ${this.playerLevel}! Now focusing on System Prompting.`);
+    } else if (moduleName === "SystemPromptingModule" && this.playerLevel === 4) {
+        this.playerLevel = 5;
+        console.log(`Player leveled up to Level ${this.playerLevel}! Now focusing on Contextual Prompting.`);
+    } else if (moduleName === "ContextualPromptingModule" && this.playerLevel === 5) {
+        this.playerLevel = 6;
+        console.log(`Player leveled up to Level ${this.playerLevel}! Now focusing on Step-Back Prompting.`);
+    } else if (moduleName === "StepBackPromptingModule" && this.playerLevel === 6) {
+        this.playerLevel = 7;
+        console.log(`Player leveled up to Level ${this.playerLevel}! Now focusing on Chain of Thought.`);
+    } else if (moduleName === "CoTPromptingModule" && this.playerLevel === 7) {
+        this.playerLevel = 8;
+        console.log(`Player leveled up to Level ${this.playerLevel}! Now focusing on Self-Consistency.`);
+    } else if (moduleName === "SelfConsistencyPromptingModule" && this.playerLevel === 8) {
+        this.playerLevel = 9;
+        console.log(`Player leveled up to Level ${this.playerLevel}! Now focusing on Tree of Thoughts.`);
+    } else if (moduleName === "ToTPromptingModule" && this.playerLevel === 9) {
+        console.log("Player completed the final level!");
+        // Potentially set a flag or different state instead of just incrementing level
+    }
+    // Add more level-up conditions here
+
+    // --- Switch Active Module --- 
+    // Re-run initModules to select the next appropriate module based on the new level/completion status
+    this.initModules(); 
+
+    // If initModules failed to set an active module (e.g., no more modules)
+    if (!this.activeModule) {
+        console.log("All available modules completed or no suitable module found.");
+        // Trigger game over or show a final completion message?
+        this.statusMessage = "Congratulations! All current challenges completed!";
+        // Optionally trigger the game over sequence
+        this.gameOver(); 
+    }
+  }
+
+  // Helper to check if all defined modules are marked complete
+  allModulesCompleted() {
+      const definedModules = [
+          "EnergyConversionModule", 
+          "FewShotModule", 
+          "RolePromptingModule",
+          "SystemPromptingModule",
+          "ContextualPromptingModule",
+          "StepBackPromptingModule",
+          "CoTPromptingModule",
+          "SelfConsistencyPromptingModule",
+          "ToTPromptingModule"
+      ];
+      // Check if every module in the list exists in the completedModules set
+      return definedModules.every(moduleName => this.completedModules.has(moduleName));
   }
 }
 

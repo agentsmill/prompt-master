@@ -5,6 +5,19 @@
     <title>Energy Prompt Ninja</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles/pixel.css" />
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      // Ensure you are using the correct paths if you install via npm, otherwise use CDN links.
+      // Example using CDN for simplicity (replace with npm imports if using a bundler)
+      // Note: For production, use specific versions, not 'latest'
+    </script>
+    <!-- Add Firebase SDKs - Using CDN for simplicity. Consider using npm for production. -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
     <style>
       body {
         background: #181c1f;
@@ -74,19 +87,138 @@
     />
   </head>
   <body>
-    <h1>⚡ Energy Prompt Ninja ⚡</h1>
-    <div id="game-container">
-      <canvas id="game-canvas" width="480" height="320"></canvas>
-      <!-- Prompt Input Area -->
-      <div id="prompt-controls">
-        <textarea
-          id="prompt-input"
-          rows="2"
-          placeholder="Enter your zero-shot prompt here..."
-        ></textarea>
-        <button id="submit-prompt" class="pixel-btn">Submit</button>
-      </div>
+    <div id="auth-container" style="position: absolute; top: 10px; right: 10px; text-align: right;">
+        <div id="user-info" style="display: none; margin-bottom: 5px;">
+            <span id="user-name"></span>
+            <button id="logout-btn" class="pixel-btn" style="font-size: 0.7em; padding: 3px 8px;">Logout</button>
+        </div>
+        <button id="login-btn" class="pixel-btn">Login with Google</button>
     </div>
+
+    <h1>⚡ Energy Prompt Ninja ⚡</h1>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active">
+      <h2>Welcome!</h2>
+      <div id="lang-select" style="margin-bottom: 15px;">
+        <button class="pixel-btn lang-btn" data-lang="en">English</button>
+        <button class="pixel-btn lang-btn" data-lang="pl">Polski</button>
+      </div>
+      <button id="start-game-btn" class="pixel-btn">Start Game</button>
+      <button id="instructions-btn" class="pixel-btn">Instructions</button>
+      <button id="education-btn" class="pixel-btn">Learn More</button>
+      <button id="leaderboard-btn" class="pixel-btn">Leaderboard</button>
+    </div>
+
+    <!-- Instructions Screen -->
+    <div id="instructions-screen" class="screen">
+      <h2>How to Play</h2>
+      <p style="text-align: left;">Welcome, Energy Prompt Ninja! You are an Energy Prompt Engineer for the Global Energy Transformation Initiative (GETI).</p>
+      <p style="text-align: left;">Your mission is to craft effective prompts to solve real-world energy problems, optimize systems, and drive innovation in sustainable energy.</p>
+      <p style="text-align: left;">Use the prompt input area on the game screen to submit your solutions (prompts) to the various energy transformation challenges presented. Good luck!</p>
+      <button class="back-to-start-btn pixel-btn">Back</button>
+    </div>
+
+    <!-- Game Screen (Existing Content) -->
+    <div id="game-screen" class="screen">
+      <div id="game-container">
+        <canvas id="game-canvas" width="480" height="320"></canvas>
+        <!-- Prompt Input Area -->
+        <div id="prompt-controls">
+          <textarea
+            id="prompt-input"
+            rows="2"
+            placeholder="Enter your zero-shot prompt here..."
+          ></textarea>
+          <button id="submit-prompt" class="pixel-btn">Submit</button>
+        </div>
+      </div>
+      <button id="end-game-btn" class="pixel-btn" style="margin-top: 10px;">End Game (Test)</button> <!-- Temporary button -->
+    </div>
+
+    <!-- Summary Screen -->
+    <div id="summary-screen" class="screen">
+      <h2>Game Over!</h2>
+      <p>Summary of your game goes here...</p>
+      <p>Score: <span id="final-score">0</span></p>
+      <button class="back-to-start-btn pixel-btn">Play Again</button>
+    </div>
+
+    <!-- Educational Screen -->
+    <div id="educational-screen" class="screen">
+      <h2>Learn About Energy & Prompts</h2>
+      <p style="text-align: left;">
+        <strong>What is a Prompt?</strong> A text prompt (sometimes with images)
+        is the input a large language model (LLM) uses to predict an output. You
+        don't need to be a data scientist – everyone can write a prompt!
+      </p>
+      <p style="text-align: left;">
+        <strong>What is Prompt Engineering?</strong> Crafting effective prompts can be
+        complex. Aspects like the model used, its training data, configuration,
+        your word choice, style, tone, structure, and context all matter.
+        Prompt engineering is the iterative process of designing high-quality
+        prompts to guide LLMs towards accurate and meaningful outputs. It involves
+        tinkering to find the best prompt, optimizing length, and evaluating its style and structure.
+      </p>
+      <p style="text-align: left;">
+        Remember, an LLM is a prediction engine. It takes text and predicts the next word (token)
+        based on its training. Your prompt sets up the LLM to predict the right sequence of tokens.
+      </p>
+      <p style="text-align: left;">
+        <strong>Few-Shot Prompting:</strong> When zero-shot isn't enough, you can provide
+        <em>multiple</em> examples (shots) in your prompt. This shows the model a specific
+        pattern or output structure you want it to follow. Useful for more complex tasks
+        or when you need precise output formatting.
+      </p>
+      <p style="text-align: left;">
+        <strong>Role Prompting:</strong> Assign a specific role or persona to the LLM
+        (e.g., "Act as a solar energy expert", "You are a helpful assistant explaining grid stability").
+        This helps the model adopt the knowledge, tone, and style associated with that role,
+        leading to more focused and contextually appropriate responses.
+      </p>
+      <p style="text-align: left;">
+        <strong>System Prompting:</strong> Set overall rules or constraints for the LLM's behavior
+        (e.g., "Only return JSON", "Answer in a formal tone"). This helps control the output format,
+        enforce safety guidelines, or define the model's overall task boundaries.
+      </p>
+      <p style="text-align: left;">
+        <strong>Contextual Prompting:</strong> Provide specific background information or context
+        relevant to the immediate task (e.g., "Context: The user is asking about solar panel efficiency in cloudy weather.").
+        This helps the model generate more relevant and nuanced responses.
+      </p>
+      <p style="text-align: left;">
+        <strong>Step-Back Prompting:</strong> Ask a broader, more general question first to activate
+        relevant concepts, then use that answer as context for your specific question.
+        Helps the LLM apply general principles to solve complex problems.
+      </p>
+      <p style="text-align: left;">
+        <strong>Chain of Thought (CoT):</strong> Prompt the LLM to explain its reasoning step-by-step
+        before giving the final answer (e.g., add "Let's think step by step."). Improves performance on
+        tasks requiring logic, calculation, or multi-step deduction.
+      </p>
+      <p style="text-align: left;">
+        <strong>Self-Consistency:</strong> Generate multiple chains of thought for the same prompt
+        (often using higher temperature) and choose the most frequent final answer.
+        Improves robustness and accuracy, especially for complex reasoning tasks.
+      </p>
+      <p style="text-align: left;">
+        <strong>Tree of Thoughts (ToT):</strong> Allows the LLM to explore multiple reasoning paths
+        simultaneously, evaluating intermediate steps like branches on a tree. Useful for very complex
+        problems requiring exploration and strategic thinking.
+      </p>
+      <button class="back-to-start-btn pixel-btn">Back</button>
+    </div>
+
+    <!-- Leaderboard Screen -->
+    <div id="leaderboard-screen" class="screen">
+      <h2>Leaderboard</h2>
+      <ol id="leaderboard-list" style="list-style: none; padding: 0; max-width: 300px; margin: auto; text-align: left;">
+        <!-- Leaderboard entries will be added here -->
+        <li>Loading...</li>
+      </ol>
+      <button class="back-to-start-btn pixel-btn">Back</button>
+    </div>
+
     <!-- Load the UI script which will initialize the GameEngine -->
     <script type="module" src="js/core/ui.js"></script>
   </body>

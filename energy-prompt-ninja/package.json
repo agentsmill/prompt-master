@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "mocha \"../tests/**/*.test.js\""
+    "test": "mocha --require tests/setup.js \"tests/**/*.test.js\""
   },
   "keywords": [],
   "author": "",
@@ -11,6 +11,7 @@
   "description": "",
   "devDependencies": {
     "mocha": "^10.4.0",
-    "chai": "^4.4.1"
+    "chai": "^4.4.1",
+    "jsdom": "^24.0.0"
   }
 }

@@ -2,10 +2,10 @@
 
 :root {
   /* Energy Colors */
-  --solar-yellow: #ffe066;
-  --wind-blue: #44e0ff;
+  --energy-yellow: #ffe066; /* Renamed from --solar-yellow */
+  --energy-blue: #44e0ff; /* Renamed from --wind-blue */
   --hydro-blue: #1e90ff;
-  --battery-green: #7fff6a;
+  --energy-green: #7fff6a; /* Renamed from --battery-green */
   --grid-gray: #b0b8c1;
   --background-dark: #181c1f;
   --accent-orange: #ffb347;
@@ -25,21 +25,21 @@ canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   background: var(--background-dark);
-  border: 2px solid var(--wind-blue);
-  box-shadow: 0 0 16px var(--wind-blue), 0 0 2px #fff4;
+  border: 2px solid var(--energy-blue);
+  box-shadow: 0 0 16px var(--energy-blue), 0 0 2px #fff4;
 }
 
 .energy-bar {
   height: 12px;
-  background: linear-gradient(90deg, var(--solar-yellow), var(--battery-green));
+  background: linear-gradient(90deg, var(--energy-yellow), var(--energy-green));
   border: 1px solid var(--grid-gray);
   border-radius: 2px;
   margin: 4px 0;
 }
 
 .energy-flow {
-  color: var(--wind-blue);
-  text-shadow: 0 0 4px var(--wind-blue);
+  color: var(--energy-blue);
+  text-shadow: 0 0 4px var(--energy-blue);
 }
 
 .status-success {
@@ -54,7 +54,7 @@ canvas {
   font-family: inherit;
   font-size: 1em;
   padding: 6px 18px;
-  background: var(--solar-yellow);
+  background: var(--energy-yellow);
   color: #222;
   border: 2px solid var(--grid-gray);
   border-radius: 4px;
@@ -71,6 +71,35 @@ canvas {
   background: #222;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--wind-blue);
+  background: var(--energy-blue);
   border-radius: 4px;
+}
+
+/* Screen Management */
+.screen {
+  display: none; /* Hide all screens by default */
+  width: 100%;
+  max-width: 600px; /* Or your preferred max-width */
+  margin: 20px auto;
+  padding: 20px;
+  text-align: center;
+}
+
+.screen.active {
+  display: block; /* Show the active screen */
+}
+
+/* Style buttons within screens for consistent spacing */
+.screen .pixel-btn {
+  margin: 10px 5px;
+}
+
+.screen h2 {
+  color: var(--energy-yellow);
+  margin-bottom: 1em;
+}
+
+.screen p {
+  line-height: 1.6;
+  margin-bottom: 1em;
 }

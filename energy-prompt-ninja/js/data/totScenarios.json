@@ -1,0 +1,22 @@
+[
+  {
+    "id": "tot_complex_plan_1",
+    "title": "Net-Zero City Plan",
+    "type": "tree-of-thoughts",
+    "domain": "Strategic Planning",
+    "description": "Outline a high-level plan for a city to achieve net-zero emissions by 2050. Explain ToT explores multiple strategic paths. Your prompt should ask for evaluation of different strategies (e.g., renewables, efficiency, carbon capture).",
+    "task_input": "Outline high-level net-zero plan for city by 2050.",
+    "concept_focus": "Tree of Thoughts explores & evaluates multiple reasoning paths/strategies.",
+    "evaluation_keywords": ["net-zero", "plan", "city", "2050", "strategies", "evaluate", "options", "explore"]
+  },
+  {
+    "id": "tot_research_breakthrough_1",
+    "title": "Fusion Power Research",
+    "type": "tree-of-thoughts",
+    "domain": "Research Strategy",
+    "description": "Propose research directions most likely to lead to a fusion power breakthrough in 20 years. Explain ToT helps navigate complex, uncertain problems. Your prompt should ask to explore and assess different research pathways.",
+    "task_input": "Propose research directions for fusion power breakthrough in 20 years.",
+    "concept_focus": "Tree of Thoughts helps navigate complex problems by exploring/assessing paths.",
+    "evaluation_keywords": ["fusion power", "research", "breakthrough", "directions", "pathways", "assess", "explore", "likely"]
+  }
+]

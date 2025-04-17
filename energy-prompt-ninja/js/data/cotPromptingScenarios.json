@@ -1,0 +1,22 @@
+[
+  {
+    "id": "cot_solar_payback_1",
+    "title": "Solar Payback Calculation",
+    "type": "cot-prompting",
+    "domain": "Solar Economics",
+    "description": "Calculate the simple payback period for a solar panel system. System cost: $15,000. Annual savings: $1,800. Instruct the AI to 'think step by step' to show the calculation.",
+    "task_input": "System cost: $15,000. Annual savings: $1,800.",
+    "required_instruction": "think step by step",
+    "evaluation_keywords": ["payback", "cost", "savings", "years", "divide", "step"]
+  },
+  {
+    "id": "cot_energy_comparison_1",
+    "title": "Energy Source Comparison",
+    "type": "cot-prompting",
+    "domain": "Energy Analysis",
+    "description": "Compare the lifecycle emissions of coal vs. wind power for generating 1 GWh of electricity. Ask the AI to provide a step-by-step comparison, considering extraction, transport, generation, and decommissioning.",
+    "task_input": "Compare lifecycle emissions of coal vs. wind power for 1 GWh.",
+    "required_instruction": "step-by-step comparison",
+     "evaluation_keywords": ["coal", "wind", "emissions", "lifecycle", "extraction", "generation", "comparison", "step"]
+  }
+]

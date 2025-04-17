@@ -1,0 +1,22 @@
+[
+  {
+    "id": "selfcons_policy_impact_1",
+    "title": "Policy Impact Analysis",
+    "type": "self-consistency",
+    "domain": "Policy Analysis",
+    "description": "Analyze the likely economic impact of a new $50/ton carbon tax on the transportation sector. Explain that Self-Consistency involves generating multiple reasoning paths to find the most robust answer. Your prompt should clearly define the complex question.",
+    "task_input": "Analyze economic impact of $50/ton carbon tax on transportation sector.",
+    "concept_focus": "Self-Consistency uses multiple reasoning paths for robust answers to complex questions.",
+    "evaluation_keywords": ["impact", "carbon tax", "transportation", "economic", "analyze", "likely", "scenarios"]
+  },
+   {
+    "id": "selfcons_tech_forecast_1",
+    "title": "Battery Tech Forecast",
+    "type": "self-consistency",
+    "domain": "Technology Forecasting",
+    "description": "Forecast the dominant battery chemistry for grid storage in 10 years. Explain Self-Consistency helps by sampling diverse possibilities. Your prompt should ask for the most probable forecast based on current trends.",
+    "task_input": "Forecast dominant battery chemistry for grid storage in 10 years.",
+    "concept_focus": "Self-Consistency samples diverse reasoning paths for forecasting.",
+    "evaluation_keywords": ["forecast", "battery", "grid storage", "chemistry", "dominant", "probable", "trends"]
+  }
+]
