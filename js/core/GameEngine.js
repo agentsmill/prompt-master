@@ -26,8 +26,6 @@ export class GameEngine {
     this.running = false;
     this.statusMessage = "Initializing..."; // Initial status
     this.score = 0; // Initialize score
-    this.gameTimeLimit = 60; // Example: 60 seconds time limit
-    this.elapsedTime = 0; // Track elapsed time
     this.onGameOver = onGameOver; // Store the callback
     this.playerLevel = 1; // Start at level 1
     this.completedModules = new Set(); // Track completed module names
@@ -156,20 +154,12 @@ export class GameEngine {
     this.update(delta);
     this.render();
 
-    // Check for game over condition *after* update/render
-    if (this.running && this.elapsedTime >= this.gameTimeLimit) {
-      this.gameOver();
-    }
-
     if (this.running) { // Only request next frame if still running
         window.requestAnimationFrame(this.loop.bind(this));
     }
   }
 
   update(delta) {
-    // Update elapsed time
-    this.elapsedTime += delta;
-
     // Update the active game module
     if (this.activeModule && typeof this.activeModule.update === "function") {
       this.activeModule.update(delta);
@@ -209,9 +199,6 @@ export class GameEngine {
     this.ctx.fillStyle = "var(--text-white)";
     this.ctx.textAlign = "left";
     this.ctx.fillText(`Score: ${this.score}`, 10, 20);
-    const timeLeft = Math.max(0, this.gameTimeLimit - Math.floor(this.elapsedTime));
-    this.ctx.textAlign = "right";
-    this.ctx.fillText(`Time: ${timeLeft}`, this.canvas.width - 10, 20);
     this.ctx.restore();
 
     // Optionally render engine-level status (e.g., FPS, global messages)
@@ -257,7 +244,6 @@ export class GameEngine {
   reset() {
     console.log("Resetting GameEngine state...");
     this.score = 0;
-    this.elapsedTime = 0;
     this.statusMessage = "Ready.";
     this.running = false; // Ensure it's stopped before restarting
     // TODO: Reset active module state as well
