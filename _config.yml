@@ -1,0 +1,12 @@
+# Basic Jekyll site configuration
+theme: jekyll-theme-primer # Default GitHub Pages theme
+
+# Exclude directories and files from processing
+exclude:
+  - node_modules/
+  - energy-prompt-ninja/node_modules/ # Be explicit just in case
+  - vendor/
+  - Gemfile
+  - Gemfile.lock
+  - README.md # Exclude if you don't want it rendered as a page
+  - LICENSE
