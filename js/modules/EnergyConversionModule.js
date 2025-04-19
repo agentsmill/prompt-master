@@ -355,6 +355,7 @@ export class EnergyConversionModule {
      // --- Prompt Evaluation Logic (Zero-Shot) --- 
      let score = 0;
      let feedback = [];
+     console.log(`[Debug] Scenario: ${currentChallenge.id}, Index: ${this.currentScenarioIdx}, Total Scenarios: ${this.scenarios.length}`);
      const promptLower = promptText.toLowerCase();
 
      // Criterion 1: Includes Input Value?
@@ -394,6 +395,7 @@ export class EnergyConversionModule {
 
      // --- Feedback and Progression (Zero-Shot) ---
      this.statusMessage = feedback.join(' | '); // Combine feedback messages
+     console.log(`[Debug] Calculated Score: ${score}, Threshold: ${qualityThreshold}`);
 
      const qualityThreshold = 5; // Minimum score needed to be considered "successful" enough to advance
 
@@ -434,6 +436,7 @@ export class EnergyConversionModule {
        // --- Prompt Evaluation Logic (Few-Shot) --- 
        let score = 0;
        let feedback = [];
+       console.log(`[Debug] Scenario: ${currentChallenge.id}, Index: ${this.currentScenarioIdx}, Total Scenarios: ${this.scenarios.length}`);
        const promptLower = promptText.toLowerCase();
 
        // Criterion 1: Includes Examples? (Very basic check)
@@ -457,6 +460,7 @@ export class EnergyConversionModule {
 
        // --- Feedback and Progression (Few-Shot) --- 
        this.statusMessage = feedback.join(' | ');
+       console.log(`[Debug] Calculated Score: ${score}, Threshold: ${qualityThreshold}`);
        const qualityThreshold = 7; // Higher bar for few-shot
 
        if (score > 0) {
