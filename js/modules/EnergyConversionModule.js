@@ -109,7 +109,7 @@ export class EnergyConversionModule {
     ctx.fillText(scenario.title, 24, 80);
 
     ctx.fillStyle = "#b0b8c1";
-    this.wrapText(ctx, scenario.description, 24, 112, 432, 18);
+    this.wrapText(ctx, scenario.description, 24, 112, 432, 24);
 
     ctx.fillStyle = "#7fff6a";
     ctx.fillText("Prompt:", 24, 180);
