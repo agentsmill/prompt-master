@@ -19,65 +19,276 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 
     <style>
+      :root {
+        /* Color palette */
+        --bg-dark: #181c1f;
+        --bg-panel: #22282c;
+        --bg-input: #33383c;
+        --energy-blue: #0af;
+        --energy-blue-glow: #0ff;
+        --energy-yellow: #ffec70;
+        --energy-yellow-glow: #ffec70aa;
+        --grid-gray: #44484c;
+        --text-white: #f8f8ff;
+        --text-light-gray: #ccccdd;
+        --accent-green: #50fa7b;
+        --accent-red: #ff5555;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
       body {
-        background: #181c1f;
+        background: var(--bg-dark);
         margin: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         min-height: 100vh;
-        font-family: "Press Start 2P", monospace, sans-serif; /* Apply font globally */
-        color: #f8f8ff; /* Default text color */
+        font-family: "Press Start 2P", monospace, sans-serif;
+        color: var(--text-white);
+        padding: 0 20px;
+        line-height: 1.6;
+        overflow-x: hidden;
       }
+
+      .screen {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        max-width: 800px;
+        width: 100%;
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .screen.active {
+        display: flex;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
       #game-container {
-        margin-top: 24px; /* Reduced margin */
-        box-shadow: 0 0 24px #0ff2, 0 0 4px #fff4;
+        margin-top: 24px;
+        box-shadow: 0 0 24px var(--energy-blue-glow), 0 0 4px #fff4;
         border-radius: 8px;
-        background: #22282c;
+        background: var(--bg-panel);
         padding: 16px;
-        display: flex; /* Use flexbox for layout */
-        flex-direction: column; /* Stack canvas and input vertically */
-        align-items: center; /* Center items */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 520px;
+        transition: all 0.3s ease;
       }
+
+      #game-container:focus-within {
+        box-shadow: 0 0 32px var(--energy-blue-glow), 0 0 8px #fff6;
+      }
+
       canvas {
         image-rendering: pixelated;
-        background: #181c1f;
-        border: 2px solid var(--energy-blue); /* Use CSS variable */
+        background: var(--bg-dark);
+        border: 2px solid var(--energy-blue);
         border-radius: 4px;
         display: block;
-        /* margin: 0 auto; Removed, handled by flexbox */
+        box-shadow: 0 0 10px var(--energy-blue-glow);
+        transition: all 0.2s ease;
       }
+
       h1 {
-        color: var(--energy-yellow); /* Use CSS variable */
+        color: var(--energy-yellow);
         font-family: "Press Start 2P", monospace, sans-serif;
-        text-shadow: 2px 2px 0 #000, 0 0 8px #ffec70aa;
-        margin-bottom: 0.5em;
-        margin-top: 1em; /* Add some top margin */
+        text-shadow: 2px 2px 0 #000, 0 0 8px var(--energy-yellow-glow);
+        margin-bottom: 0.8em;
+        margin-top: 1.2em;
+        text-align: center;
+        animation: pulseGlow 3s infinite alternate;
       }
+
+      @keyframes pulseGlow {
+        0% { text-shadow: 2px 2px 0 #000, 0 0 8px var(--energy-yellow-glow); }
+        100% { text-shadow: 2px 2px 0 #000, 0 0 16px var(--energy-yellow-glow); }
+      }
+
+      h2 {
+        color: var(--energy-blue);
+        text-shadow: 1px 1px 0 #000, 0 0 6px var(--energy-blue-glow);
+        margin-bottom: 1em;
+        text-align: center;
+      }
+
+      p {
+        margin-bottom: 1.2em;
+        font-size: 0.85em;
+        line-height: 1.7;
+      }
+
       #prompt-controls {
-        margin-top: 16px; /* Space between canvas and controls */
+        margin-top: 16px;
         display: flex;
-        align-items: center; /* Align items vertically */
-        width: 100%; /* Take full width of container */
-        max-width: 480px; /* Match canvas width */
+        align-items: center;
+        width: 100%;
+        max-width: 480px;
       }
+
       #prompt-input {
-        flex-grow: 1; /* Allow textarea to grow */
+        flex-grow: 1;
         margin-right: 8px;
-        padding: 8px;
-        font-family: inherit; /* Use body font */
-        font-size: 0.9em;
+        padding: 12px;
+        font-family: inherit;
+        font-size: 0.85em;
         border: 2px solid var(--grid-gray);
         border-radius: 4px;
-        background: #33383c;
+        background: var(--bg-input);
         color: var(--text-white);
-        min-height: 40px; /* Minimum height */
-        resize: vertical; /* Allow vertical resize */
+        min-height: 44px;
+        resize: vertical;
+        transition: all 0.2s ease;
       }
-      /* Add styles for pixel-btn if not fully covered in pixel.css */
+
+      #prompt-input:focus {
+        border-color: var(--energy-blue);
+        box-shadow: 0 0 8px var(--energy-blue-glow);
+        outline: none;
+      }
+
+      /* Auth container styling */
+      #auth-container {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        text-align: right;
+        z-index: 10;
+        background: var(--bg-panel);
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid var(--grid-gray);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      }
+
+      #user-info {
+        display: none;
+        margin-bottom: 5px;
+        font-size: 0.7em;
+        color: var(--energy-yellow);
+      }
+
       .pixel-btn {
-        /* Styles from pixel.css are likely sufficient */
-        flex-shrink: 0; /* Prevent button from shrinking */
+        background: var(--bg-panel);
+        color: var(--text-white);
+        border: 2px solid var(--energy-blue);
+        padding: 8px 16px;
+        font-family: inherit;
+        font-size: 0.8em;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        margin: 5px 0;
+        box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+        text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+      }
+
+      .pixel-btn:hover {
+        background-color: var(--energy-blue);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+      }
+
+      .pixel-btn:active {
+        transform: translateY(1px);
+        box-shadow: 0 0px 0 rgba(0,0,0,0.2);
+      }
+
+      #start-screen .pixel-btn {
+        width: 200px;
+        margin: 6px 0;
+      }
+
+      #lang-select {
+        margin: 15px 0;
+        display: flex;
+        gap: 10px;
+      }
+
+      .lang-btn {
+        padding: 6px 12px;
+        font-size: 0.7em;
+      }
+
+      /* Custom styling for screens */
+      #instructions-screen p,
+      #educational-screen p {
+        background: var(--bg-panel);
+        padding: 12px;
+        border-radius: 6px;
+        border-left: 3px solid var(--energy-blue);
+        text-align: left;
+        font-size: 0.8em;
+        max-width: 600px;
+      }
+
+      #leaderboard-list {
+        list-style: none;
+        padding: 0;
+        width: 100%;
+        max-width: 400px;
+        margin: 10px auto 20px;
+        text-align: left;
+      }
+
+      #leaderboard-list li {
+        background: var(--bg-panel);
+        padding: 10px 15px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        border-left: 3px solid var(--energy-yellow);
+        font-size: 0.8em;
+      }
+
+      #summary-screen #final-score {
+        color: var(--energy-yellow);
+        font-size: 1.5em;
+        animation: scoreGlow 2s infinite alternate;
+      }
+
+      @keyframes scoreGlow {
+        0% { text-shadow: 0 0 5px var(--energy-yellow-glow); }
+        100% { text-shadow: 0 0 15px var(--energy-yellow-glow); }
+      }
+
+      /* Mobile responsiveness */
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 1.4em;
+        }
+        
+        #game-container {
+          padding: 10px;
+        }
+        
+        canvas {
+          width: 100%;
+          height: auto;
+        }
+        
+        #auth-container {
+          position: relative;
+          top: 0;
+          right: 0;
+          text-align: center;
+          margin-top: 10px;
+          width: 100%;
+        }
+        
+        .pixel-btn {
+          font-size: 0.75em;
+          padding: 6px 12px;
+        }
       }
     </style>
     <!-- Pixel font for retro look -->
@@ -87,12 +298,13 @@
     />
   </head>
   <body>
-    <div id="auth-container" style="position: absolute; top: 10px; right: 10px; text-align: right;">
-        <div id="user-info" style="display: none; margin-bottom: 5px;">
+    <div id="auth-container">
+        <div id="user-info">
             <span id="user-name"></span>
             <button id="logout-btn" class="pixel-btn" style="font-size: 0.7em; padding: 3px 8px;">Logout</button>
         </div>
         <button id="login-btn" class="pixel-btn">Login with Google</button>
+        <button id="anon-login-btn" class="pixel-btn">Play as Guest</button>
     </div>
 
     <h1>⚡ Energy Prompt Ninja ⚡</h1>
@@ -100,7 +312,7 @@
     <!-- Start Screen -->
     <div id="start-screen" class="screen active">
       <h2>Welcome!</h2>
-      <div id="lang-select" style="margin-bottom: 15px;">
+      <div id="lang-select">
         <button class="pixel-btn lang-btn" data-lang="en">English</button>
         <button class="pixel-btn lang-btn" data-lang="pl">Polski</button>
       </div>
@@ -113,9 +325,9 @@
     <!-- Instructions Screen -->
     <div id="instructions-screen" class="screen">
       <h2>How to Play</h2>
-      <p style="text-align: left;">Welcome, Energy Prompt Ninja! You are an Energy Prompt Engineer for the Global Energy Transformation Initiative (GETI).</p>
-      <p style="text-align: left;">Your mission is to craft effective prompts to solve real-world energy problems, optimize systems, and drive innovation in sustainable energy.</p>
-      <p style="text-align: left;">Use the prompt input area on the game screen to submit your solutions (prompts) to the various energy transformation challenges presented. Good luck!</p>
+      <p>Welcome, Energy Prompt Ninja! You are an Energy Prompt Engineer for the Global Energy Transformation Initiative (GETI).</p>
+      <p>Your mission is to craft effective prompts to solve real-world energy problems, optimize systems, and drive innovation in sustainable energy.</p>
+      <p>Use the prompt input area on the game screen to submit your solutions (prompts) to the various energy transformation challenges presented. Good luck!</p>
       <button class="back-to-start-btn pixel-btn">Back</button>
     </div>
 
@@ -147,64 +359,46 @@
     <!-- Educational Screen -->
     <div id="educational-screen" class="screen">
       <h2>Learn About Energy & Prompts</h2>
-      <p style="text-align: left;">
+      <p>
         <strong>What is a Prompt?</strong> A text prompt (sometimes with images)
         is the input a large language model (LLM) uses to predict an output. You
         don't need to be a data scientist – everyone can write a prompt!
       </p>
-      <p style="text-align: left;">
+      <p>
         <strong>What is Prompt Engineering?</strong> Crafting effective prompts can be
         complex. Aspects like the model used, its training data, configuration,
         your word choice, style, tone, structure, and context all matter.
         Prompt engineering is the iterative process of designing high-quality
-        prompts to guide LLMs towards accurate and meaningful outputs. It involves
-        tinkering to find the best prompt, optimizing length, and evaluating its style and structure.
+        prompts to guide LLMs towards accurate and meaningful outputs.
       </p>
-      <p style="text-align: left;">
+      <p>
         Remember, an LLM is a prediction engine. It takes text and predicts the next word (token)
         based on its training. Your prompt sets up the LLM to predict the right sequence of tokens.
       </p>
-      <p style="text-align: left;">
+      <p>
         <strong>Few-Shot Prompting:</strong> When zero-shot isn't enough, you can provide
         <em>multiple</em> examples (shots) in your prompt. This shows the model a specific
-        pattern or output structure you want it to follow. Useful for more complex tasks
-        or when you need precise output formatting.
+        pattern or output structure you want it to follow.
       </p>
-      <p style="text-align: left;">
+      <p>
         <strong>Role Prompting:</strong> Assign a specific role or persona to the LLM
         (e.g., "Act as a solar energy expert", "You are a helpful assistant explaining grid stability").
-        This helps the model adopt the knowledge, tone, and style associated with that role,
-        leading to more focused and contextually appropriate responses.
+        This helps the model adopt the knowledge, tone, and style associated with that role.
       </p>
-      <p style="text-align: left;">
+      <p>
         <strong>System Prompting:</strong> Set overall rules or constraints for the LLM's behavior
         (e.g., "Only return JSON", "Answer in a formal tone"). This helps control the output format,
         enforce safety guidelines, or define the model's overall task boundaries.
       </p>
-      <p style="text-align: left;">
+      <p>
         <strong>Contextual Prompting:</strong> Provide specific background information or context
         relevant to the immediate task (e.g., "Context: The user is asking about solar panel efficiency in cloudy weather.").
         This helps the model generate more relevant and nuanced responses.
       </p>
-      <p style="text-align: left;">
-        <strong>Step-Back Prompting:</strong> Ask a broader, more general question first to activate
-        relevant concepts, then use that answer as context for your specific question.
-        Helps the LLM apply general principles to solve complex problems.
-      </p>
-      <p style="text-align: left;">
+      <p>
         <strong>Chain of Thought (CoT):</strong> Prompt the LLM to explain its reasoning step-by-step
         before giving the final answer (e.g., add "Let's think step by step."). Improves performance on
         tasks requiring logic, calculation, or multi-step deduction.
-      </p>
-      <p style="text-align: left;">
-        <strong>Self-Consistency:</strong> Generate multiple chains of thought for the same prompt
-        (often using higher temperature) and choose the most frequent final answer.
-        Improves robustness and accuracy, especially for complex reasoning tasks.
-      </p>
-      <p style="text-align: left;">
-        <strong>Tree of Thoughts (ToT):</strong> Allows the LLM to explore multiple reasoning paths
-        simultaneously, evaluating intermediate steps like branches on a tree. Useful for very complex
-        problems requiring exploration and strategic thinking.
       </p>
       <button class="back-to-start-btn pixel-btn">Back</button>
     </div>
@@ -212,7 +406,7 @@
     <!-- Leaderboard Screen -->
     <div id="leaderboard-screen" class="screen">
       <h2>Leaderboard</h2>
-      <ol id="leaderboard-list" style="list-style: none; padding: 0; max-width: 300px; margin: auto; text-align: left;">
+      <ol id="leaderboard-list">
         <!-- Leaderboard entries will be added here -->
         <li>Loading...</li>
       </ol>

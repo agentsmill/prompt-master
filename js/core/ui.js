@@ -258,47 +258,231 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Authentication Logic --- 
-  const googleProvider = new firebase.auth.GoogleAuthProvider();
+  let app, auth, db, currentUser = null;
+  try {
+    // Initialize Firebase (using compat libraries loaded via CDN)
+    app = firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    console.log("Firebase initialized successfully.");
 
-  loginBtn?.addEventListener('click', () => {
-      auth.signInWithPopup(googleProvider)
-          .then((result) => {
-              console.log("Login successful:", result.user);
-              // Auth state change will handle UI update
-          })
-          .catch((error) => {
-              console.error("Login failed:", error);
-              alert(`Login failed: ${error.message}`);
-          });
-  });
+    // Apply translations using keys from JSON files
+    setText('h1', 'appTitle');
+    // ... other translations ...
+    setText('#login-btn', 'loginBtnText', null, "Login with Google"); 
+    setText('#logout-btn', 'logoutBtnText', null, "Logout");
+    setText('#anon-login-btn', 'anonLoginBtnText', null, "Play as Guest"); // Translate anon button
+    setText('#leaderboard-btn', 'leaderboardBtnText', null, "Leaderboard");
+    setText('#leaderboard-screen h2', 'leaderboardTitleText', null, "Leaderboard");
 
-  logoutBtn?.addEventListener('click', () => {
-      auth.signOut()
-          .then(() => {
-              console.log("Logout successful.");
-               // Auth state change will handle UI update
-          })
-          .catch((error) => {
-              console.error("Logout failed:", error);
-          });
-  });
+    // --- Attach Auth Listeners AFTER successful initialization ---
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-  auth.onAuthStateChanged((user) => {
-      currentUser = user; // Update current user state
-      if (user) {
-          // User is signed in
-          console.log("User signed in:", user.displayName);
-          if (userInfoDiv) userInfoDiv.style.display = 'block';
-          if (userNameSpan) userNameSpan.textContent = `Hi, ${user.displayName}!`;
-          if (loginBtn) loginBtn.style.display = 'none';
+    // Add loading visual indicators
+    function setButtonLoading(button, isLoading) {
+      if (isLoading) {
+        button.disabled = true;
+        button.dataset.originalText = button.textContent;
+        button.textContent = "Loading...";
+        button.classList.add("loading");
       } else {
-          // User is signed out
-          console.log("User signed out.");
-          if (userInfoDiv) userInfoDiv.style.display = 'none';
-          if (userNameSpan) userNameSpan.textContent = '';
-          if (loginBtn) loginBtn.style.display = 'block';
+        button.disabled = false;
+        button.textContent = button.dataset.originalText || button.textContent;
+        button.classList.remove("loading");
       }
-  });
+    }
+
+    loginBtn?.addEventListener('click', () => {
+        setButtonLoading(loginBtn, true);
+        auth.signInWithPopup(googleProvider)
+            .then((result) => {
+                console.log("Login successful:", result.user);
+                // Auth state change will handle UI update
+            })
+            .catch((error) => {
+                console.error("Login failed:", error);
+                alert(`Login failed: ${error.message}`);
+                setButtonLoading(loginBtn, false);
+            });
+    });
+
+    logoutBtn?.addEventListener('click', () => {
+        setButtonLoading(logoutBtn, true);
+        auth.signOut()
+            .then(() => {
+                console.log("Logout successful.");
+                 // Auth state change will handle UI update
+            })
+            .catch((error) => {
+                console.error("Logout failed:", error);
+                setButtonLoading(logoutBtn, false);
+            });
+    });
+
+    // Add listener for Anonymous login
+    const anonLoginBtn = document.getElementById("anon-login-btn"); // Get reference to anon button
+    anonLoginBtn?.addEventListener('click', () => {
+        setButtonLoading(anonLoginBtn, true);
+        auth.signInAnonymously()
+            .then(() => {
+                console.log('Signed in anonymously');
+                 // Auth state change will handle UI update
+            })
+            .catch((error) => {
+                console.error("Anonymous sign-in failed:", error);
+                alert(`Anonymous sign-in failed: ${error.message}`);
+                setButtonLoading(anonLoginBtn, false);
+            });
+    });
+
+    // Add smooth transition for auth container
+    function updateAuthUI(user) {
+      const authContainer = document.getElementById("auth-container");
+      
+      if (authContainer) {
+        // Add transition effect
+        authContainer.style.opacity = "0";
+        authContainer.style.transform = "translateY(-10px)";
+        
+        setTimeout(() => {
+          // Update content
+          if (user) {
+            if (user.isAnonymous) {
+                // User is signed in ANONYMOUSLY
+                console.log("User signed in anonymously:", user.uid);
+                if (userInfoDiv) userInfoDiv.style.display = 'block'; // Show user info area
+                if (userNameSpan) userNameSpan.textContent = `Playing as Guest`; // Display Guest status
+                if (logoutBtn) logoutBtn.style.display = 'none'; // Hide logout for anonymous
+                if (loginBtn) loginBtn.style.display = 'block'; // Keep Google login visible to link/upgrade
+                if (anonLoginBtn) anonLoginBtn.style.display = 'none'; // Hide anon button once logged in
+            } else {
+                // User is signed in with a NAMED account (Google)
+                console.log("User signed in:", user.displayName);
+                if (userInfoDiv) userInfoDiv.style.display = 'block';
+                if (userNameSpan) userNameSpan.textContent = `Hi, ${user.displayName}!`;
+                if (logoutBtn) logoutBtn.style.display = 'block'; // Show logout for named users
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (anonLoginBtn) anonLoginBtn.style.display = 'none'; // Hide anon button
+            }
+          } else {
+            // User is signed out
+            console.log("User signed out.");
+            if (userInfoDiv) userInfoDiv.style.display = 'none';
+            if (userNameSpan) userNameSpan.textContent = '';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            if (loginBtn) loginBtn.style.display = 'block';
+            if (anonLoginBtn) anonLoginBtn.style.display = 'block'; // Show anon button when logged out
+          }
+          
+          // Reset loading states for all buttons
+          if (loginBtn) setButtonLoading(loginBtn, false);
+          if (logoutBtn) setButtonLoading(logoutBtn, false);
+          if (anonLoginBtn) setButtonLoading(anonLoginBtn, false);
+          
+          // Fade back in
+          setTimeout(() => {
+            authContainer.style.opacity = "1";
+            authContainer.style.transform = "translateY(0)";
+          }, 50);
+        }, 200);
+      }
+    }
+
+    auth.onAuthStateChanged((user) => {
+        currentUser = user; // Update current user state
+        updateAuthUI(user);
+    });
+
+    // Add smooth screen transitions
+    const allScreenBtns = document.querySelectorAll('[id$="-btn"]');
+    allScreenBtns.forEach(btn => {
+      if (btn.id === 'login-btn' || btn.id === 'logout-btn' || btn.id === 'anon-login-btn' || 
+          btn.id === 'submit-prompt') return; // Skip auth buttons and submit
+
+      btn.addEventListener('click', function() {
+        const targetScreenId = this.id.replace('-btn', '-screen');
+        const currentScreen = document.querySelector('.screen.active');
+        
+        // Handle the back button case
+        if (this.classList.contains('back-to-start-btn')) {
+          switchScreen(currentScreen.id, 'start-screen');
+        } 
+        // Handle other navigation buttons
+        else if (document.getElementById(targetScreenId)) {
+          switchScreen(currentScreen.id, targetScreenId);
+        }
+      });
+    });
+
+    function switchScreen(fromScreenId, toScreenId) {
+      const fromScreen = document.getElementById(fromScreenId);
+      const toScreen = document.getElementById(toScreenId);
+      
+      if (!fromScreen || !toScreen) return;
+      
+      // Fade out current screen
+      fromScreen.style.opacity = '0';
+      fromScreen.style.transform = 'translateY(10px)';
+      
+      setTimeout(() => {
+        fromScreen.classList.remove('active');
+        toScreen.classList.add('active');
+        toScreen.style.opacity = '0';
+        toScreen.style.transform = 'translateY(10px)';
+        
+        // Fade in new screen
+        setTimeout(() => {
+          toScreen.style.opacity = '1';
+          toScreen.style.transform = 'translateY(0)';
+        }, 50);
+      }, 300);
+    }
+
+    // Enhance leaderboard loading animation
+    function updateLeaderboard(data) {
+      const leaderboardList = document.getElementById('leaderboard-list');
+      if (!leaderboardList) return;
+      
+      // Add loading animation
+      leaderboardList.innerHTML = `<li class="loading-item">Loading leaderboard data...</li>`;
+      
+      setTimeout(() => {
+        if (data && data.length > 0) {
+          leaderboardList.innerHTML = '';
+          data.forEach((entry, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+              <span class="rank">#${index + 1}</span>
+              <span class="player">${entry.name || 'Anonymous'}</span>
+              <span class="score">${entry.score}</span>
+            `;
+            li.style.animation = `fadeIn 0.3s ease forwards ${index * 0.1}s`;
+            li.style.opacity = '0';
+            leaderboardList.appendChild(li);
+          });
+        } else {
+          leaderboardList.innerHTML = `<li>No scores yet. Be the first!</li>`;
+        }
+      }, 800); // Simulate loading for better UX
+    }
+
+    // Initialize CSS transitions for the auth container
+    const authContainer = document.getElementById('auth-container');
+    if (authContainer) {
+      authContainer.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    }
+
+    // Initialize transitions for screens
+    const screens = document.querySelectorAll('.screen');
+    screens.forEach(screen => {
+      screen.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    });
+
+    // --------------------------------------------------------
+
+  } catch (error) {
+    // ... existing code ...
+  }
 
   // --- Leaderboard Logic --- 
   async function submitScore(score) {
