@@ -619,3 +619,20 @@ input::placeholder, textarea::placeholder {
     );
   }
 }
+
+/* Feedback Box Styling */
+#feedback-box {
+  width: 100%;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: rgba(24, 28, 31, 0.7); /* Darker, slightly transparent background */
+  border: 1px solid var(--grid-gray);
+  border-radius: var(--border-radius-sm);
+  min-height: 40px; /* Ensure it has some height even when empty */
+  color: var(--text-light-gray);
+  font-size: 0.8em;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
+}

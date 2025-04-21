@@ -109,16 +109,15 @@ export class EnergyConversionModule {
     ctx.fillText(scenario.title, 24, 80);
 
     ctx.fillStyle = "#b0b8c1";
-    this.wrapText(ctx, scenario.description, 24, 120, 432, 24);
+    // Call wrapText and get the final Y position
+    const descriptionEndY = this.wrapText(ctx, scenario.description, 24, 120, 432, 24);
 
     ctx.fillStyle = "#7fff6a";
-    const promptLabelY = 120 + Math.ceil(ctx.measureText(scenario.description).width / 432) * 24 + 30;
+    // Use the descriptionEndY to position the next elements
+    const promptLabelY = descriptionEndY + 30; // Add padding
     ctx.fillText("Prompt:", 24, promptLabelY);
     ctx.fillStyle = "#fff";
     ctx.fillText("[Type your prompt in the UI below]", 24, promptLabelY + 30);
-
-    ctx.fillStyle = "#ffec70";
-    ctx.fillText(this.statusMessage, 24, this.engine.canvas.height - 30);
 
     ctx.restore();
   }
@@ -127,18 +126,20 @@ export class EnergyConversionModule {
     // Utility for multi-line scenario descriptions
     const words = text.split(" ");
     let line = "";
+    let currentY = y; // Track the Y position
     for (let n = 0; n < words.length; n++) {
       const testLine = line + words[n] + " ";
       const metrics = ctx.measureText(testLine);
       if (metrics.width > maxWidth && n > 0) {
-        ctx.fillText(line, x, y);
+        ctx.fillText(line, x, currentY);
         line = words[n] + " ";
-        y += lineHeight;
+        currentY += lineHeight;
       } else {
         line = testLine;
       }
     }
-    ctx.fillText(line, x, y);
+    ctx.fillText(line, x, currentY); // Draw the last line
+    return currentY + lineHeight; // Return the Y position for the *next* line
   }
 
   /**
@@ -332,12 +333,21 @@ export class EnergyConversionModule {
       return;
     }
 
+    let feedbackMessage = ""; // Variable to hold feedback
     // Call level-specific processing
     if (this.engine.playerLevel === 1) {
-        this.processZeroShotPrompt(promptText, currentChallenge);
+        feedbackMessage = this.processZeroShotPrompt(promptText, currentChallenge);
     } else {
-        this.processFewShotPrompt(promptText, currentChallenge);
+        feedbackMessage = this.processFewShotPrompt(promptText, currentChallenge);
     }
+
+    // Update the dedicated feedback box instead of statusMessage property
+    const feedbackBox = document.getElementById('feedback-box');
+    if (feedbackBox) {
+        feedbackBox.textContent = feedbackMessage || "Processing..."; // Display feedback or default
+    }
+    // No longer setting this.statusMessage as primary feedback mechanism
+    // this.statusMessage = feedbackMessage; 
   }
 
   // --- Level 1: Zero-Shot Processing --- 
@@ -351,7 +361,7 @@ export class EnergyConversionModule {
       `(Level 1) Processing zero-shot prompt for challenge: ${currentChallenge.id}`,
       promptText
     );
-     this.statusMessage = "Analyzing your zero-shot prompt...";
+    // Removed setting this.statusMessage here
 
      // --- Prompt Evaluation Logic (Zero-Shot) --- 
      let score = 0;
@@ -394,10 +404,9 @@ export class EnergyConversionModule {
        feedback.push(`Doesn't specify target unit (${targetUnit}): Optional but good practice!`);
      }
 
-     // --- Feedback and Progression (Zero-Shot) ---
-     this.statusMessage = feedback.join(' | '); // Combine feedback messages
+     // --- Feedback and Progression (Zero-Shot) --- 
+     let finalFeedback = feedback.join(' | '); // Combine feedback messages
      console.log(`[Debug] Calculated Score: ${score}, Threshold: ${qualityThreshold}`);
-
      const qualityThreshold = 5; // Minimum score needed to be considered "successful" enough to advance
 
      if (score > 0) {
@@ -405,25 +414,24 @@ export class EnergyConversionModule {
      }
 
      if (score >= qualityThreshold) {
-       this.statusMessage += " | Good prompt! Advancing to next challenge.";
+       finalFeedback += " | Good prompt! Advancing to next challenge.";
        console.log(`(Level 1) Prompt evaluated. Score: ${score}. Advancing.`);
 
        // Move to the next scenario
        this.currentScenarioIdx++;
        if (this.currentScenarioIdx >= this.scenarios.length) {
          // --- MODULE COMPLETE --- 
-         this.statusMessage = "Zero-Shot Module Complete!";
+         finalFeedback = "Zero-Shot Module Complete!";
          console.log("EnergyConversionModule (Level 1) finished.");
          this.engine.moduleCompleted(this.constructor.name); // Notify engine
-         // Don't reset index here, engine will switch module or end game
-         return; // Stop further processing in this call
+         return finalFeedback; // Return feedback immediately
        }
      } else {
-         this.statusMessage += " | Prompt needs improvement. Try again!";
+         finalFeedback += " | Prompt needs improvement. Try again!";
          console.log(`(Level 1) Prompt evaluated. Score: ${score}. Needs improvement.`);
-         // Player stays on the same challenge
      }
      // --- End Evaluation Logic (Zero-Shot) ---
+     return finalFeedback; // Return the feedback string
   }
 
   // --- Level 2: Few-Shot Processing (Placeholder) --- 
@@ -432,7 +440,7 @@ export class EnergyConversionModule {
         `(Level 2) Processing few-shot prompt for challenge: ${currentChallenge.id}`,
         promptText
       );
-       this.statusMessage = "Analyzing your few-shot prompt...";
+      // Removed setting this.statusMessage here
 
        // --- Prompt Evaluation Logic (Few-Shot) --- 
        let score = 0;
@@ -460,7 +468,7 @@ export class EnergyConversionModule {
         // Add other relevant checks: e.g., clarity of examples, consistency
 
        // --- Feedback and Progression (Few-Shot) --- 
-       this.statusMessage = feedback.join(' | ');
+       let finalFeedback = feedback.join(' | ');
        console.log(`[Debug] Calculated Score: ${score}, Threshold: ${qualityThreshold}`);
        const qualityThreshold = 7; // Higher bar for few-shot
 
@@ -469,42 +477,41 @@ export class EnergyConversionModule {
        }
 
        if (score >= qualityThreshold) {
-           this.statusMessage += " | Good few-shot prompt! Advancing.";
+           finalFeedback += " | Good few-shot prompt! Advancing.";
            console.log(`(Level 2) Prompt evaluated. Score: ${score}. Advancing.`);
            this.currentScenarioIdx++;
            if (this.currentScenarioIdx >= this.scenarios.length) {
                // --- MODULE COMPLETE (Level 2) --- 
-               this.statusMessage = "Few-Shot Module Complete!";
+               finalFeedback = "Few-Shot Module Complete!";
                console.log("EnergyConversionModule (Level 2) finished.");
                this.engine.moduleCompleted("FewShotModule"); // Use a different name for progression
-               return; 
+               return finalFeedback; 
            }
        } else {
-           this.statusMessage += " | Few-shot prompt needs improvement. Try again!";
+           finalFeedback += " | Few-shot prompt needs improvement. Try again!";
            console.log(`(Level 2) Prompt evaluated. Score: ${score}. Needs improvement.`);
        }
        // --- End Evaluation Logic (Few-Shot) --- 
+       return finalFeedback; // Return the feedback string
   }
 
   // Reset module state
   reset() {
     console.log(`Resetting EnergyConversionModule (Level ${this.engine.playerLevel})...`);
     this.currentScenarioIdx = 0;
-    this.resetStatusMessage();
+    // Reset the feedback box content on module reset
+    const feedbackBox = document.getElementById('feedback-box');
+    if (feedbackBox) {
+        if (this.engine.playerLevel === 1) {
+            feedbackBox.textContent = "Ready for your first zero-shot challenge!";
+        } else {
+            feedbackBox.textContent = "Ready for your first few-shot challenge!";
+        }
+    }
     // No score reset here, engine handles score reset.
     console.log(`EnergyConversionModule (Level ${this.engine.playerLevel}) reset.`);
   }
 
-  // Helper to set initial status message based on level
-  resetStatusMessage() {
-     if (!this.loaded) {
-         this.statusMessage = "Loading scenarios...";
-         return;
-     }
-     if (this.engine.playerLevel === 1) {
-         this.statusMessage = "Ready for your first zero-shot challenge!";
-     } else {
-         this.statusMessage = "Ready for your first few-shot challenge!";
-     }
-  }
+  // Remove resetStatusMessage as feedback is now handled differently
+  // resetStatusMessage() { ... } 
 }
