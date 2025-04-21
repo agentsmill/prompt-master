@@ -109,15 +109,16 @@ export class EnergyConversionModule {
     ctx.fillText(scenario.title, 24, 80);
 
     ctx.fillStyle = "#b0b8c1";
-    this.wrapText(ctx, scenario.description, 24, 112, 432, 24);
+    this.wrapText(ctx, scenario.description, 24, 120, 432, 24);
 
     ctx.fillStyle = "#7fff6a";
-    ctx.fillText("Prompt:", 24, 180);
+    const promptLabelY = 120 + Math.ceil(ctx.measureText(scenario.description).width / 432) * 24 + 30;
+    ctx.fillText("Prompt:", 24, promptLabelY);
     ctx.fillStyle = "#fff";
-    ctx.fillText("[Type your prompt in the UI below]", 24, 210);
+    ctx.fillText("[Type your prompt in the UI below]", 24, promptLabelY + 30);
 
     ctx.fillStyle = "#ffec70";
-    ctx.fillText(this.statusMessage, 24, 300);
+    ctx.fillText(this.statusMessage, 24, this.engine.canvas.height - 30);
 
     ctx.restore();
   }
