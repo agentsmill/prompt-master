@@ -87,10 +87,11 @@ Do not add any explanations unless it's a FAIL reason. Be strict.`;
 
         } catch (error) {
             console.error("LLMService evaluatePrompt Error:", error);
-            // Return failure but allow game to continue
+            // Return failure but indicate it was an API error
             return { 
                 success: false, 
-                feedback: `LLM evaluation failed due to an error (${error.message}). Please check API key and connection, or try again.` 
+                feedback: `LLM evaluation could not be performed due to an API/network error: ${error.message}. Please check API key and connection.`,
+                apiError: true // Add a flag to indicate the failure type
             };
         }
     }

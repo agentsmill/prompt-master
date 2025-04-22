@@ -113,6 +113,10 @@ export class CoTPromptingModule {
         const promptLower = userPrompt.toLowerCase();
         const logic = scenario.evaluation_logic;
 
+        // --- Structural Checks (Run regardless of LLM) ---
+        let structureChecksPassed = false;
+        let structureFeedback = "";
+
         // Specific Check for CoT: Look for step-by-step reasoning keywords
         const cotKeywords = ["step-by-step", "think step", "reasoning", "process", "first", "second", "then", "finally", "conclusion"];
         const hasCotKeywords = cotKeywords.some(kw => promptLower.includes(kw));
@@ -128,42 +132,52 @@ export class CoTPromptingModule {
                 return { success: false, feedback: `Prompt is missing key concepts for the task: ${missingKeywords.join(', ')}.` };
             }
         }
+        
+        // If we reach here, basic structural checks have passed
+        structureChecksPassed = true;
+        structureFeedback = "Prompt correctly asks for step-by-step reasoning.";
 
-        // --- LLM Evaluation Integration --- 
+        // --- LLM Evaluation (If Applicable) --- 
         if (logic.type === 'llm_evaluation') {
             console.log("(CoT Eval) Attempting LLM evaluation.");
             const apiKey = this.engine.getApiKey();
 
             if (!apiKey) {
-                console.warn("(CoT Eval) LLM evaluation skipped: API Key not set in GameEngine.");
-                // Fallback: Pass if structure looks okay, but warn user.
-                return { success: true, feedback: "Prompt structure seems okay (asked for steps). LLM evaluation skipped: API Key needed for full check." }; 
-                // Alternative fallback: return { success: false, feedback: "LLM evaluation skipped: API Key needed." };
+                console.warn("(CoT Eval) LLM evaluation skipped: API Key not set.");
+                // Fallback: Pass based on structure, but warn user.
+                return { success: true, feedback: `${structureFeedback} (LLM check skipped: API Key not set).` }; 
             }
 
             try {
-                // Use the criteria defined in the scenario JSON
                 const criteria = logic.criteria || "Evaluate if the prompt effectively asks for step-by-step reasoning towards the task solution.";
                 console.log("(CoT Eval) Calling LLMService with criteria:", criteria);
                 
-                // Call the LLM service via the engine
                 const llmResult = await this.engine.llmService.evaluatePrompt(userPrompt, criteria, apiKey);
                 
                 console.log("(CoT Eval) LLM Service Result:", llmResult);
-                return llmResult; // Return the { success: boolean, feedback: string } object directly
+
+                // Handle API Error specifically
+                if (llmResult.apiError) {
+                    console.warn("(CoT Eval) LLM evaluation failed due to API error. Falling back to structural check.");
+                     // Fallback: Pass based on structure, but warn user about API error.
+                     return { success: true, feedback: `${structureFeedback} (LLM check failed: ${llmResult.feedback})` };
+                }
+                
+                // If no API error, return the LLM result directly
+                return llmResult; 
             
             } catch (error) {
-                console.error("(CoT Eval) LLM Service call failed:", error);
-                // Graceful fallback if API fails
+                // This catch block might be redundant if LLMService handles errors, but good for safety.
+                console.error("(CoT Eval) Unexpected error during LLM Service call:", error);
                 return { 
-                    success: false, // Treat API error as failure for this attempt
-                    feedback: `LLM evaluation couldn't be performed due to an error. Please check API key/connection or try again. (${error.message})` 
+                    success: false, 
+                    feedback: `An unexpected error occurred during LLM evaluation. Please try again.` 
                 };
             }
         }
 
-        // If not llm_evaluation type, and keyword checks passed
-        return { success: true, feedback: "Prompt correctly asks for step-by-step reasoning." };
+        // If not llm_evaluation type, return the result of structural checks
+        return { success: structureChecksPassed, feedback: structureFeedback };
     }
 
     reset() {
