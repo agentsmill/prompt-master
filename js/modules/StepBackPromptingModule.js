@@ -1,16 +1,24 @@
 /**
  * StepBackPromptingModule
- * Teaches step-back prompting techniques.
+ * Teaches step-back prompting: asking a general question before the specific one.
  */
 export class StepBackPromptingModule {
     constructor(engine) {
         this.engine = engine;
-        this.ctx = engine.ctx;
         this.scenarios = [];
         this.currentScenarioIdx = 0;
+        this.currentScenario = null;
         this.loaded = false;
-        this.currentStep = 1; // 1: Ask step-back, 2: Use context for specific task
-        this.stepBackContext = ""; // Stores the user's step-back prompt output (simulated)
+        this.currentStep = 1; // State: 1 for step-back question, 2 for specific task prompt
+        this.stepBackContextConcept = ""; // Store the concept from step 1
+
+        this.ui = {
+            title: document.getElementById('challenge-title'),
+            description: document.getElementById('challenge-description'),
+            task: document.getElementById('challenge-task'),
+            promptInput: document.getElementById('prompt-input'),
+            feedbackBox: document.getElementById('feedback-box')
+        };
         this.init();
     }
 
@@ -25,158 +33,160 @@ export class StepBackPromptingModule {
                 throw new Error('Invalid scenario data format');
             }
             this.loaded = true;
-            this.reset();
+            console.log("StepBackPromptingModule scenarios loaded successfully.");
         } catch (e) {
             console.error(`Failed to load scenarios from ${scenarioFile}:`, e);
-            this.scenarios = [{ id: "fallback_stepback_1", title: "Fallback StepBack", description: "First ask general question, then specific.", type:"step-back-prompting", domain:"Fallback", step_back_question_hint:"General Q", specific_task:"Specific Task" }];
-            this.loaded = true;
-            this.reset();
+            if (this.ui.feedbackBox) this.ui.feedbackBox.textContent = `Error loading scenarios for Step-Back Prompting: ${e.message}`;
+            this.loaded = false;
         }
     }
 
-    update(delta) {}
-
-    render(ctx) {
-        ctx.save();
-        ctx.font = '16px "Press Start 2P", monospace';
-        ctx.fillStyle = "#ffe066";
-        ctx.textAlign = "left";
-
-        if (!this.loaded || this.scenarios.length === 0) {
-            ctx.fillText("Loading Step-Back Scenarios...", 24, 48);
-            ctx.restore();
+    startScenario(index = 0) {
+        if (!this.loaded || index >= this.scenarios.length || index < 0) {
+            console.error("Cannot start scenario: Step-Back module not loaded or index out of bounds.");
+            if (this.ui.feedbackBox) this.ui.feedbackBox.textContent = "Error starting scenario.";
             return;
         }
-        const scenario = this.scenarios[this.currentScenarioIdx];
-        if (!scenario) { ctx.fillStyle = "#ff6b6b"; ctx.fillText("Error: Invalid scenario index.", 24, 48); ctx.restore(); return; }
-
-        ctx.fillText(`Step-Back Prompting:`, 24, 48);
-        ctx.fillStyle = "#44e0ff";
-        ctx.fillText(scenario.title || "Untitled", 24, 80);
-        
-        ctx.fillStyle = "#b0b8c1";
-        let description = scenario.description || "No description.";
-        let descriptionEndY = this.wrapText(ctx, description, 24, 120, 432, 24);
-
-        let promptLabelY = descriptionEndY + 30;
-        
-        // Modify description and prompt label based on current step
-        if (this.currentStep === 1) {
-            ctx.fillStyle = "#7fff6a"; // Green hint
-            this.wrapText(ctx, `Step 1: Ask a general question related to: '${scenario.step_back_question_hint}'`, 24, descriptionEndY + 15, 432, 18);
-            ctx.fillStyle = "#fff";
-        } else { // Step 2
-            ctx.fillStyle = "#ffec70"; // Yellow context
-            ctx.fillText(`Context (from Step 1):`, 24, descriptionEndY + 15);
-            ctx.fillStyle = "#cccccc"; 
-            const contextEndY = this.wrapText(ctx, this.stepBackContext || "[No context generated]", 24, descriptionEndY + 39, 432, 18);
-            descriptionEndY = contextEndY; // Update end Y for prompt label
-            
-            ctx.fillStyle = "#7fff6a"; // Green hint
-            this.wrapText(ctx, `Step 2: Use the context above to ask for the specific task: '${scenario.specific_task}'`, 24, descriptionEndY + 15, 432, 18);
-            ctx.fillStyle = "#fff";
-            promptLabelY = descriptionEndY + 15 + 40; // Adjust prompt label Y
-        }
-
-        ctx.fillText("Your Prompt:", 24, promptLabelY);
-        ctx.restore();
+        this.currentScenarioIdx = index;
+        this.currentScenario = this.scenarios[this.currentScenarioIdx];
+        this.currentStep = 1; // Reset to step 1 for new scenario
+        this.stepBackContextConcept = this.currentScenario.step_back_question_hint || "general principles"; // Use hint as concept placeholder
+        console.log(`Starting StepBackPrompting scenario ${this.currentScenarioIdx}: ${this.currentScenario.id}`);
+        this.render();
     }
 
-    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-        const words = text.split(" ");
-        let line = "";
-        let currentY = y;
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + " ";
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxWidth && n > 0) {
-                ctx.fillText(line, x, currentY);
-                line = words[n] + " ";
-                currentY += lineHeight;
-            } else {
-                line = testLine;
-            }
+    render() {
+        if (!this.currentScenario || !this.ui.title) {
+            console.error("Cannot render: No current step-back scenario or UI elements missing.");
+            if (this.ui.feedbackBox) this.ui.feedbackBox.textContent = "Error rendering scenario details.";
+            return;
         }
-        ctx.fillText(line, x, currentY);
-        return currentY + lineHeight;
+
+        // Clear previous state
+        this.ui.promptInput.value = '';
+        this.ui.feedbackBox.className = 'feedback-box'; // Reset style
+
+        // Populate common UI elements
+        this.ui.title.textContent = `Level ${this.currentScenario.level}: ${this.currentScenario.title || 'Step-Back Prompting'}`;
+        this.ui.description.innerHTML = this.formatText(this.currentScenario.description || 'No description.');
+
+        // Render based on the current step
+        if (this.currentStep === 1) {
+            this.ui.task.innerHTML = `<strong>Step 1: Formulate Step-Back Question</strong><br>First, craft a prompt to ask a general question about the principles or concepts related to <i>'${this.stepBackContextConcept}'</i>.`;
+            this.ui.promptInput.placeholder = `Enter prompt for the general step-back question...`;
+            this.ui.feedbackBox.textContent = 'Focus on asking the broad, conceptual question first.';
+        } else { // currentStep === 2
+            this.ui.task.innerHTML = `<strong>Step 2: Formulate Specific Prompt</strong><br>Good! Now, imagine the step-back question gave you insights about <i>'${this.stepBackContextConcept}'</i>. Use that understanding to craft a prompt for the specific task: <br><i>${this.formatText(this.currentScenario.specific_task)}</i>`;
+            this.ui.promptInput.placeholder = `Enter prompt for the specific task, incorporating step-back insights...`;
+            this.ui.feedbackBox.textContent = `Use the insights from Step 1 to address the specific task: ${this.currentScenario.specific_task}`;
+        }
     }
 
-    processPrompt(promptText) {
-        const feedbackBox = document.getElementById('feedback-box');
-        if (!this.loaded || !feedbackBox) return;
-        const scenario = this.scenarios[this.currentScenarioIdx];
-        if (!scenario) { feedbackBox.textContent = "Error: Invalid scenario."; return; }
-        console.log(`(Step-Back Step ${this.currentStep}) Processing prompt for challenge: ${scenario.id}`, promptText);
-        let feedbackMessage = `Evaluating Step ${this.currentStep} prompt...`;
-        let score = 0;
-        const promptLower = promptText.toLowerCase();
-        let advanceStep = false;
+    formatText(text) {
+        return text.replace(/\n/g, '<br>');
+    }
 
-        if (this.currentStep === 1) {
-            // Evaluate Step 1: Check if prompt asks a general question related to hint
-            if (promptLower.includes("?") && (scenario.step_back_question_hint && promptLower.includes(scenario.step_back_question_hint.toLowerCase().split(' ')[0]))) { // Simple check
-                score = 5;
-                feedbackMessage = "Step 1: General question asked ✔️. Preparing Step 2.";
-                this.stepBackContext = `Simulated Answer: Key principles include reliability, efficiency, and integration of renewables.`; // Simulate getting context
-                advanceStep = true;
-            } else {
-                feedbackMessage = `Step 1: Ask a general question about '${scenario.step_back_question_hint}' ❌`;
-            }
-        } else { // Step 2
-            // Evaluate Step 2: Check if prompt uses context and asks for specific task
-            const contextKeywords = this.stepBackContext.toLowerCase().split(' ').filter(w=>w.length > 4).slice(0,3);
-            const taskKeywords = scenario.specific_task.toLowerCase().split(' ').filter(w=>w.length > 3).slice(0,3);
-            let contextUsed = contextKeywords.every(kw => promptLower.includes(kw));
-            let taskAsked = taskKeywords.every(kw => promptLower.includes(kw));
-            
-            if (contextUsed && taskAsked) {
-                score = 10;
-                feedbackMessage = "Step 2: Context used and task asked ✔️. Advancing to next challenge!";
-                advanceStep = true;
-            } else {
-                feedbackMessage = "Step 2: Ensure prompt uses context from Step 1 and asks for the specific task ❌";
-                if (!contextUsed) feedbackMessage += " (Context missing)";
-                if (!taskAsked) feedbackMessage += " (Specific task missing)";
-            }
+    handleSubmission(userPrompt) {
+        if (!this.currentScenario || !this.loaded) {
+            this.ui.feedbackBox.textContent = "Error: Step-Back module not ready or no scenario loaded.";
+            this.ui.feedbackBox.className = 'feedback-box error';
+            return;
         }
 
-        this.engine.addScore(score);
-        feedbackBox.textContent = feedbackMessage;
+        console.log(`(Step-Back) Handling submission for scenario: ${this.currentScenario.id}, Step: ${this.currentStep}`, userPrompt);
+        
+        if (this.currentStep === 1) {
+            this.handleStep1Submission(userPrompt);
+        } else { // currentStep === 2
+            this.handleStep2Submission(userPrompt);
+        }
+    }
 
-        const qualityThreshold = (this.currentStep === 1) ? 5 : 8; // Threshold per step
-        if (score >= qualityThreshold && advanceStep) {
-            if (this.currentStep === 1) {
-                this.currentStep = 2;
-                feedbackMessage += " | Proceeding to Step 2.";
-                console.log(`(Step-Back) Advancing to Step 2.`);
-            } else { // Completed Step 2
-                this.currentStep = 1; // Reset for next scenario
-                this.stepBackContext = ""; 
-                this.currentScenarioIdx++;
-                if (this.currentScenarioIdx >= this.scenarios.length) {
-                    feedbackMessage = "Step-Back Prompting Module Complete!";
-                    console.log("StepBackPromptingModule finished.");
-                    this.engine.moduleCompleted(this.constructor.name);
-                } else {
-                   feedbackMessage += " | Advancing to next Step-Back challenge.";
-                   console.log(`(Step-Back) Advancing to next challenge.`);
-                }
-            }
+    handleStep1Submission(userPrompt) {
+        const evaluationResult = this.evaluateStep1(userPrompt, this.currentScenario);
+        if (evaluationResult.success) {
+            this.ui.feedbackBox.textContent = evaluationResult.feedback; // e.g., "Good step-back question! Proceeding to Step 2."
+            this.ui.feedbackBox.className = 'feedback-box info';
+            this.currentStep = 2;
+            this.render(); // Re-render UI for Step 2
         } else {
-            feedbackMessage += " | Needs improvement. Try again!";
-             console.log(`(Step-Back Step ${this.currentStep}) Prompt evaluated. Score: ${score}. Needs improvement.`);
+            this.ui.feedbackBox.textContent = `Evaluation (Step 1): ${evaluationResult.feedback} Try again!`;
+            this.ui.feedbackBox.className = 'feedback-box error';
+            // Show hint on failure
+            if (this.currentScenario.hints && this.currentScenario.hints.length > 0) {
+                 this.ui.feedbackBox.textContent += ` Hint: ${this.currentScenario.hints[0] || 'Focus on the general concept.'}`;
+            }
         }
-         feedbackBox.textContent = feedbackMessage;
+    }
+
+    handleStep2Submission(userPrompt) {
+        const evaluationResult = this.evaluateStep2(userPrompt, this.currentScenario);
+        if (evaluationResult.success) {
+            const score = 15; // Slightly higher score for multi-step
+            this.ui.feedbackBox.textContent = `${this.currentScenario.success_message} (+${score} energy)`;
+            this.ui.feedbackBox.className = 'feedback-box success';
+            console.log(`(Step-Back) Scenario ${this.currentScenario.id} PASSED.`);
+            this.engine.completeScenario(this.constructor.name, score); // Notify engine
+        } else {
+            this.ui.feedbackBox.textContent = `Evaluation (Step 2): ${evaluationResult.feedback} Try again!`;
+            this.ui.feedbackBox.className = 'feedback-box error';
+            // Show hint on failure
+             if (this.currentScenario.hints && this.currentScenario.hints.length > 1) {
+                 this.ui.feedbackBox.textContent += ` Hint: ${this.currentScenario.hints[1] || 'Make sure your prompt addresses the specific task.'}`;
+             }
+        }
+    }
+
+    evaluateStep1(userPrompt, scenario) {
+        // Evaluate if the user asked a reasonable general/step-back question
+        const promptLower = userPrompt.toLowerCase();
+        const hintKeywords = scenario.step_back_question_hint?.toLowerCase().split(' ').filter(w => w.length > 3) || [];
+        
+        // Check if prompt is a question and includes keywords from the hint
+        const isQuestion = promptLower.includes('?') || promptLower.startsWith('what') || promptLower.startsWith('how') || promptLower.startsWith('list') || promptLower.startsWith('identify');
+        const includesKeywords = hintKeywords.length > 0 && hintKeywords.some(kw => promptLower.includes(kw));
+
+        if (isQuestion && includesKeywords) {
+             return { success: true, feedback: "Good step-back question formulated! Now proceed to Step 2." };
+        } else if (isQuestion) {
+             return { success: false, feedback: `Is your question focused on the general concept of '${scenario.step_back_question_hint}'?` };
+        } else {
+             return { success: false, feedback: "Step 1 requires formulating a general question first." };
+        }
+    }
+
+    evaluateStep2(userPrompt, scenario) {
+        // Evaluate if the final prompt addresses the specific task, potentially using step-back concepts
+        const promptLower = userPrompt.toLowerCase();
+        const specificTaskLower = scenario.specific_task?.toLowerCase() || "";
+        const taskKeywords = specificTaskLower.split(' ').filter(w => w.length > 3).slice(0, 5); // First few keywords of specific task
+        
+        // Check if the prompt includes keywords related to the specific task
+        const includesTaskKeywords = taskKeywords.length > 0 && taskKeywords.some(kw => promptLower.includes(kw));
+
+        if (includesTaskKeywords) {
+             // We assume the user incorporated the step-back thinking implicitly
+             return { success: true, feedback: "Final prompt addresses the specific task." };
+        } else {
+             return { success: false, feedback: `The final prompt needs to address the specific task: '${scenario.specific_task}'. Did you use the insights from Step 1?` };
+        }
     }
 
     reset() {
         console.log("Resetting StepBackPromptingModule...");
         this.currentScenarioIdx = 0;
+        this.currentScenario = null;
         this.currentStep = 1;
-        this.stepBackContext = "";
-        const feedbackBox = document.getElementById('feedback-box');
-        if (feedbackBox) {
-            feedbackBox.textContent = "Ready for the Step-Back Prompting challenge (Step 1)! ";
+        this.stepBackContextConcept = "";
+        if (this.ui.feedbackBox) {
+            this.ui.feedbackBox.textContent = "";
+            this.ui.feedbackBox.className = 'feedback-box';
         }
+        if (this.ui.promptInput) {
+            this.ui.promptInput.value = '';
+        }
+         if (this.ui.task) { // Clear the task area
+             this.ui.task.innerHTML = '';
+         }
     }
 }
