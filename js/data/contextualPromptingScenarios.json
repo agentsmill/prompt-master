@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": "contextual-prompt-1",
+    "level": 5,
+    "title": "Contextual Prompt: Historical Event",
+    "description": "Contextual prompting provides specific background information relevant to the task. Your goal is to ask a question about a historical event after providing context.",
+    "task": "Ask the LLM about the main consequences of the event described in the context provided.\n\nContext: \"The Boston Tea Party was a political protest that occurred on December 16, 1773, at Griffin's Wharf in Boston, Massachusetts. American colonists, frustrated and angry at Britain for imposing 'taxation without representation,' dumped 342 chests of British East India Company tea into the harbor.\"\n\nQuestion: What were the main consequences of this event?",
+    "prompt_template": "Craft a prompt that first provides the historical context and then asks the specific question about its consequences.\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "keyword_match",
+      "keywords": ["Intolerable Acts", "Coercive Acts", "Boston Port Act", "Massachusetts Government Act", "American Revolutionary War", "revolution", "escalated tensions"]
+    },
+    "hints": [
+      "Present the context clearly before asking the question.",
+      "You can use labels like 'Context:' and 'Question:' to structure the prompt.",
+      "Ensure the question directly relates to the provided context."
+    ],
+    "success_message": "Well done! You effectively used contextual prompting by providing background before the question."
+  },
+  {
+    "id": "contextual-prompt-2",
+    "level": 5,
+    "title": "Contextual Prompt: Follow-up Email",
+    "description": "Contextual prompting is useful for tasks that depend on prior information, like drafting replies. Generate a follow-up email based on a previous message thread snippet.",
+    "task": "Draft a short follow-up email asking if the report is ready, based on the provided context.\n\nContext (Previous Email Snippet):\nSubject: Project Alpha Report\nFrom: manager@example.com\nTo: you@example.com\n\nHi,\nPlease have the final Project Alpha report ready by end of day Friday.\nThanks,\nManager\n\nYour Task: It's now Monday. Draft a polite follow-up email asking about the report status.",
+    "prompt_template": "Craft a prompt that includes the previous email context and instructs the LLM to draft a polite follow-up email inquiring about the report status.\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "keyword_match",
+      "keywords": ["follow up", "following up", "Project Alpha report", "status", "ready", "checking in", "wondering", "hope you had a good weekend"]
+    },
+    "hints": [
+      "Include the relevant parts of the previous email thread as context.",
+      "Clearly state the goal: 'Draft a polite follow-up email...'",
+      "Specify the key information to include or inquire about (report status)."
+    ],
+    "success_message": "Excellent follow-up! You provided the necessary context for the LLM to draft the appropriate email."
+  }
+]

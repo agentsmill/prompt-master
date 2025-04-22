@@ -1,0 +1,37 @@
+[
+  {
+    "id": "zero-shot-1",
+    "level": 1,
+    "title": "Zero-Shot: Movie Review Sentiment",
+    "description": "Zero-shot prompting involves asking the LLM to perform a task without providing any examples first. It relies on the model's pre-existing knowledge. Your task is to classify a movie review's sentiment.",
+    "task": "Classify the following movie review as POSITIVE, NEUTRAL, or NEGATIVE:\n\nReview: \"'Her' is a disturbing study revealing the direction humanity is headed if AI is allowed to keep evolving, unchecked. I wish there were more movies like this masterpiece.\"",
+    "prompt_template": "Craft a prompt to classify the sentiment of the provided movie review. Your prompt should clearly state the task and the expected output format (POSITIVE, NEUTRAL, or NEGATIVE).\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "keyword_match",
+      "keywords": ["POSITIVE"]
+    },
+    "hints": [
+      "Clearly state the task: 'Classify the sentiment...'.",
+      "Specify the possible output categories: 'POSITIVE, NEUTRAL, or NEGATIVE'.",
+      "Include the review text within your prompt."
+    ],
+    "success_message": "Excellent! You correctly used a zero-shot prompt to classify the sentiment as POSITIVE."
+  },
+  {
+    "id": "zero-shot-2",
+    "level": 1,
+    "title": "Zero-Shot: Identify Main Topic",
+    "description": "Zero-shot can also be used for basic information extraction. Your task is to identify the main topic of a short paragraph.",
+    "task": "Identify the main topic of the following text:\n\nText: \"The James Webb Space Telescope (JWST) has recently captured stunning images of distant galaxies, providing unprecedented insights into the early universe. Its advanced infrared capabilities allow it to see objects older and more distant than any previous telescope.\"",
+    "prompt_template": "Craft a prompt to identify the main topic of the provided text. Keep the prompt simple and direct.\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "keyword_match",
+      "keywords": ["James Webb Space Telescope", "JWST", "telescope", "galaxies", "universe"]
+    },
+    "hints": [
+      "Ask the model directly: 'What is the main topic of this text?'.",
+      "Ensure the full text is included in your prompt."
+    ],
+    "success_message": "Great! You successfully identified the main topic using a simple zero-shot prompt."
+  }
+] 

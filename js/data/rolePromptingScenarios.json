@@ -1,1 +1,37 @@
-[]
+[
+  {
+    "id": "role-prompt-1",
+    "level": 4,
+    "title": "Role Prompt: Pirate Speak",
+    "description": "Role prompting assigns a specific character or identity to the LLM. Your task is to make the LLM respond like a stereotypical pirate.",
+    "task": "Ask the LLM the following question, but instruct it to answer as a pirate:\n\nQuestion: \"What is the weather like today?\"",
+    "prompt_template": "Craft a prompt that assigns the role of a pirate to the LLM and then asks it about the weather.\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "keyword_match",
+      "keywords": ["Ahoy", "Matey", "Shiver me timbers", "Landlubber", "Scurvy dog", "Ye", "🏴‍☠️", "Treasure"]
+    },
+    "hints": [
+      "Start by defining the role: 'You are a pirate. Answer the following question in pirate speak.'",
+      "Clearly state the question after the role instruction."
+    ],
+    "success_message": "Shiver me timbers! Ye successfully made the LLM talk like a pirate! Arrr!"
+  },
+  {
+    "id": "role-prompt-2",
+    "level": 4,
+    "title": "Role Prompt: Patient Tutor",
+    "description": "Role prompting can set the tone and knowledge level. Instruct the LLM to act as a patient tutor explaining a simple concept.",
+    "task": "Ask the LLM to explain photosynthesis, instructing it to respond as a patient tutor explaining it to a 10-year-old.",
+    "prompt_template": "Craft a prompt assigning the role of a patient tutor to the LLM. Ask it to explain photosynthesis simply.\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "keyword_match",
+      "keywords": ["Imagine", "plants are like little chefs", "sunlight", "water", "air", "sugar", "food", "simple terms", "makes sense?"]
+    },
+    "hints": [
+      "Define the role clearly: 'You are a patient tutor explaining concepts to a 10-year-old.'",
+      "Specify the topic: 'Explain photosynthesis in simple terms.'",
+      "You can encourage a certain tone: 'Be encouraging and use simple analogies.'"
+    ],
+    "success_message": "Wonderful explanation! You effectively set the patient tutor role for the LLM."
+  }
+]

@@ -1,1 +1,36 @@
-[]
+[
+  {
+    "id": "system-prompt-1",
+    "level": 3,
+    "title": "System Prompt: Translator",
+    "description": "System prompts set the overall context and purpose for the LLM. Your task is to instruct the LLM to act as a French-to-English translator.",
+    "task": "Translate the following French sentence to English:\n\nSentence: \"Le chat est assis sur le tapis.\"",
+    "prompt_template": "Craft a system prompt that instructs the model to translate French text to English. Then, provide the sentence to be translated.\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "keyword_match",
+      "keywords": ["The cat is sitting on the mat", "The cat sat on the mat"]
+    },
+    "hints": [
+      "Start the prompt by defining the system's overall function: e.g., 'You are a helpful French to English translator.'",
+      "Clearly separate the system instruction from the text to be translated."
+    ],
+    "success_message": "Parfait! You successfully used a system prompt to set the translator context."
+  },
+  {
+    "id": "system-prompt-2",
+    "level": 3,
+    "title": "System Prompt: Technical Summarizer",
+    "description": "System prompts define the 'big picture'. Instruct the LLM to act as a summarizer for technical articles, focusing on key findings.",
+    "task": "Summarize the key findings from the following abstract:\n\nAbstract: \"We introduce a novel deep learning architecture, TransMorph, for unsupervised medical image registration. TransMorph utilizes a transformer-based network combined with a spatial transformation layer. Experiments on brain MRI datasets show state-of-the-art performance in registration accuracy and computational efficiency compared to existing CNN-based methods.\"",
+    "prompt_template": "Craft a system prompt instructing the model to summarize technical abstracts, highlighting key findings. Then provide the abstract.\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "keyword_match",
+      "keywords": ["TransMorph", "transformer", "image registration", "state-of-the-art", "accuracy", "efficiency", "MRI"]
+    },
+    "hints": [
+      "Define the system's role: 'Summarize the key findings of the following technical abstract.'",
+      "Ensure the abstract text follows the system instruction."
+    ],
+    "success_message": "Excellent! You effectively used a system prompt to guide the LLM's summarization task."
+  }
+]

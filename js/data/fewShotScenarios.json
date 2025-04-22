@@ -1,0 +1,47 @@
+[
+  {
+    "id": "few-shot-1",
+    "level": 2,
+    "title": "Few-Shot: Simple Pizza Order Parsing",
+    "description": "Few-shot prompting provides the LLM with one or more examples (shots) to guide its output format and style. Your task is to parse a simple pizza order into JSON, following the provided example.",
+    "task": "Parse the following pizza order into a JSON object:\n\nOrder: \"I'd like a medium pizza with mushrooms, olives, and extra cheese.\"",
+    "prompt_template": "Parse a customer's pizza order into valid JSON:\n\nEXAMPLE 1:\nOrder: I want a small pizza with cheese, tomato sauce, and pepperoni.\nJSON Response:\n```json\n{\n  \"size\": \"small\",\n  \"type\": \"normal\",\n  \"ingredients\": [[\"cheese\", \"tomato sauce\", \"pepperoni\"]]\n}\n```\n\nYOUR TASK:\nOrder: I'd like a medium pizza with mushrooms, olives, and extra cheese.\nJSON Response:",
+    "evaluation_logic": {
+      "type": "json_match",
+      "expected_structure": {
+        "size": "medium",
+        "type": "normal",
+        "ingredients": [["mushrooms", "olives", "extra cheese"]]
+      }
+    },
+    "hints": [
+      "Structure your prompt with clear examples first, then the task.",
+      "Use delimiters like 'EXAMPLE:' and 'YOUR TASK:' to separate sections.",
+      "Ensure the JSON format in your examples is consistent.",
+      "Pay attention to details like pizza size and the list of ingredients."
+    ],
+    "success_message": "Awesome! You successfully used few-shot prompting to parse the order into the correct JSON format."
+  },
+  {
+    "id": "few-shot-2",
+    "level": 2,
+    "title": "Few-Shot: Complex Pizza Order Parsing (Half/Half)",
+    "description": "Few-shot prompting is powerful for complex formatting. Parse a half-and-half pizza order into JSON, using multiple examples.",
+    "task": "Parse the following pizza order into a JSON object:\n\nOrder: \"Can I get a large pizza? Half pepperoni and mushrooms, the other half just pineapple and ham.\"",
+    "prompt_template": "Parse a customer's pizza order into valid JSON:\n\nEXAMPLE 1:\nOrder: I want a small pizza with cheese, tomato sauce, and pepperoni.\nJSON Response:\n```json\n{\n  \"size\": \"small\",\n  \"type\": \"normal\",\n  \"ingredients\": [[\"cheese\", \"tomato sauce\", \"pepperoni\"]]\n}\n```\n\nEXAMPLE 2:\nOrder: Now, I would like a large pizza, with the first half cheese and mozzarella. And the other tomato sauce, ham and pineapple.\nJSON Response:\n```json\n{\n  \"size\": \"large\",\n  \"type\": \"half-half\",\n  \"ingredients\": [[\"cheese\", \"mozzarella\"], [\"tomato sauce\", \"ham\", \"pineapple\"]]\n}\n```\n\nYOUR TASK:\nOrder: Can I get a large pizza? Half pepperoni and mushrooms, the other half just pineapple and ham.\nJSON Response:",
+    "evaluation_logic": {
+      "type": "json_match",
+      "expected_structure": {
+        "size": "large",
+        "type": "half-half",
+        "ingredients": [["pepperoni", "mushrooms"], ["pineapple", "ham"]]
+      }
+    },
+    "hints": [
+      "Provide multiple, diverse examples to cover different cases (like half-half).",
+      "Clearly label each example.",
+      "The structure for 'half-half' ingredients is a list containing two lists."
+    ],
+    "success_message": "Fantastic! You handled the complex half-and-half order perfectly using few-shot prompting."
+  }
+] 
