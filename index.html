@@ -307,7 +307,47 @@
         <button id="anon-login-btn" class="pixel-btn">Play as Guest</button>
     </div>
 
-    <h1>⚡ Energy Prompt Ninja ⚡</h1>
+    <div class="game-container">
+        <header class="game-header">
+            <h1>⚡ Energy Prompt Ninja ⚡</h1>
+            <div class="game-stats">
+                <span>Level: <span id="player-level">1</span></span>
+                <span>Energy: <span id="player-energy">0</span></span>
+                 <!-- API Key Input Area -->
+                <div class="api-key-area" style="margin-left: 20px; font-size: 0.8em;">
+                     <label for="api-key-input">OpenAI Key:</label>
+                     <input type="password" id="api-key-input" placeholder="sk-...">
+                     <button id="set-api-key-btn" class="pixel-btn small-btn">Set Key</button>
+                     <span id="api-key-status" style="margin-left: 5px; color: var(--energy-blue);"></span>
+                 </div>
+            </div>
+        </header>
+
+        <canvas id="gameCanvas" width="800" height="600" style="display: none;">Your browser does not support the canvas element.</canvas>
+
+        <div id="challenge-ui" class="challenge-container">
+            <h2 id="challenge-title">Challenge Title</h2>
+            <p id="challenge-description">Challenge description goes here.</p>
+            <p id="challenge-task">Your task appears here.</p>
+            <div class="prompt-area">
+                <textarea id="prompt-input" rows="5" placeholder="Enter your prompt here..."></textarea>
+                <button id="submit-prompt-btn" class="pixel-btn">Submit Prompt</button>
+            </div>
+            <div id="feedback-box" class="feedback-box">Feedback will appear here.</div>
+        </div>
+
+        <div id="loading-screen" class="loading-container">
+             <p>Loading Energy Prompt Ninja...</p>
+             <div class="spinner"></div>
+         </div>
+
+        <div id="game-over-screen" class="game-over-container" style="display: none;">
+            <h2>Game Over!</h2>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="restart-button" class="pixel-btn">Restart Game</button>
+        </div>
+
+    </div>
 
     <!-- Start Screen -->
     <div id="start-screen" class="screen active">
@@ -329,36 +369,6 @@
       <p>Your mission is to craft effective prompts to solve real-world energy problems, optimize systems, and drive innovation in sustainable energy.</p>
       <p>Use the prompt input area on the game screen to submit your solutions (prompts) to the various energy transformation challenges presented. Good luck!</p>
       <button class="back-to-start-btn pixel-btn">Back</button>
-    </div>
-
-    <!-- Game Screen (Existing Content) -->
-    <div id="game-screen" class="screen">
-      <div id="game-container">
-        <canvas id="game-canvas" width="480" height="320"></canvas>
-        <!-- Prompt Input Area -->
-        <div id="prompt-controls">
-          <textarea
-            id="prompt-input"
-            rows="3"
-            placeholder="Wpisz tutaj swój prompt..."
-          ></textarea>
-          <button id="submit-prompt" class="pixel-btn">Wyślij</button>
-        </div>
-
-        <!-- Dedicated Feedback Area -->
-        <div id="feedback-box"></div>
-
-        <!-- Temporary End Game Button -->
-        <button id="end-game-btn" class="pixel-btn" style="margin-top: 20px">End Game (Test)</button>
-      </div>
-    </div>
-
-    <!-- Summary Screen -->
-    <div id="summary-screen" class="screen">
-      <h2>Game Over!</h2>
-      <p>Summary of your game goes here...</p>
-      <p>Score: <span id="final-score">0</span></p>
-      <button class="back-to-start-btn pixel-btn">Play Again</button>
     </div>
 
     <!-- Educational Screen -->
@@ -420,5 +430,6 @@
 
     <!-- Load the UI script which will initialize the GameEngine -->
     <script type="module" src="js/core/ui.js"></script>
+    <script type="module" src="js/core/main.js"></script>
   </body>
 </html>
