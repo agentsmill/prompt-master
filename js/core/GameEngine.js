@@ -13,6 +13,7 @@ import { SelfConsistencyPromptingModule } from "../modules/SelfConsistencyPrompt
 import { ToTPromptingModule } from "../modules/ToTPromptingModule.js";
 import { APEModule } from "../modules/APEModule.js"; // Assuming filename is APEModule.js
 import { CodePromptingModule } from "../modules/CodePromptingModule.js";
+import { LLMService } from '../services/LLMService.js'; // Import LLMService
 
 export class GameEngine {
   constructor(canvasId, onGameOver) {
@@ -31,6 +32,11 @@ export class GameEngine {
     this.onGameOver = onGameOver; // Store the callback
     this.playerLevel = 1; // Start at level 1
     this.completedModules = new Set(); // Track completed module names
+    this.playerEnergy = 0;
+    this.totalEnergyEarned = 0;
+    this.completedScenarios = new Set(); // Keep track of completed scenario IDs
+    this.apiKey = null; // Store API Key - **Handle Securely!**
+    this.llmService = new LLMService(); // Instantiate the LLM Service
 
     // Core systems (placeholders for future expansion)
     this.modules = {};
@@ -366,6 +372,23 @@ export class GameEngine {
       ];
       // Check if every module in the list exists in the completedModules set
       return definedModules.every(moduleName => this.completedModules.has(moduleName));
+  }
+
+  // --- API Key Management ---
+  setApiKey(key) {
+    // Basic storage. In a real app, consider more secure options if possible.
+    this.apiKey = key;
+    console.log("API Key has been set in GameEngine.");
+    // TODO: Optionally save to localStorage if persistence is desired (still insecure)
+    // localStorage.setItem('openai_api_key', key);
+  }
+
+  getApiKey() {
+    // TODO: Optionally load from localStorage if persistence is desired
+    // if (!this.apiKey) {
+    //    this.apiKey = localStorage.getItem('openai_api_key');
+    // }
+    return this.apiKey;
   }
 }
 
