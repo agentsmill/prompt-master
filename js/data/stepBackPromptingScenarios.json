@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "id": "step-back-1",
+    "level": 6,
+    "title": "Step-Back: Shooter Game Level Storyline",
+    "description": "Use step-back prompting by first asking a broad question about key settings for engaging FPS levels, then use that knowledge to craft a specific one‑paragraph storyline.",
+    "step_back_question_hint": "key settings for an engaging FPS level",
+    "specific_task": "Write a one‑paragraph storyline for a challenging FPS game level",
+    "hints": [
+      "Step 1: Ask for 5 key settings that make FPS levels engaging.",
+      "Step 2: Use those settings as context to request a specific storyline paragraph."
+    ],
+    "success_message": "Great! You leveraged a general question before the specific task – classic step‑back prompting."
+  },
+  {
+    "id": "step-back-2",
+    "level": 6,
+    "title": "Step-Back: Marketing Slogan",
+    "description": "First ask what makes a memorable eco‑friendly product slogan; then craft a catchy slogan for a reusable water bottle brand.",
+    "step_back_question_hint": "principles of memorable eco‑friendly slogans",
+    "specific_task": "Create a catchy slogan for a reusable water bottle brand",
+    "hints": [
+      "Step 1: Ask a general question identifying principles of eco‑friendly slogans.",
+      "Step 2: Using that context, request a slogan for the reusable bottle."  
+    ],
+    "success_message": "Excellent use of step‑back prompting to craft a slogan informed by general principles."  
+  }
+]

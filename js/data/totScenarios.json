@@ -18,5 +18,25 @@
     "task_input": "Propose research directions for fusion power breakthrough in 20 years.",
     "concept_focus": "Tree of Thoughts helps navigate complex problems by exploring/assessing paths.",
     "evaluation_keywords": ["fusion power", "research", "breakthrough", "directions", "pathways", "assess", "explore", "likely"]
+  },
+  {
+    "id": "tot-1",
+    "level": 9,
+    "title": "ToT: Trip Planning Options",
+    "description": "Tree of Thoughts (ToT) explores multiple reasoning paths or options simultaneously, like branches on a tree. Your task is to outline different potential activity options (branches) for the first day of a weekend trip.",
+    "task": "You are planning a weekend trip to London. Outline 2-3 potential options (thought branches) for activities for the first day (Saturday). Consider different interests like history, art, or entertainment.",
+    "prompt_template": "Outline 2-3 distinct options (thought branches) for the first day (Saturday) of a weekend trip to London, catering to different interests. Structure your output clearly showing the different options.\n\nTrip Plan - Day 1 Options:",
+    "evaluation_logic": {
+      "type": "llm_evaluation",
+      "evaluation_prompt": "Evaluate the following LLM response. Does it outline at least two distinct and plausible options for a day trip in London, covering different themes (e.g., Option 1: Museums, Option 2: Theatre/Entertainment, Option 3: Historical walking tour)? Respond with only 'Correct' or 'Incorrect'.\n\nLLM Response:\n{llm_response}",
+      "expected_pattern": "Correct"
+    },
+    "hints": [
+      "Think about different themes for a day: history, art, food, entertainment, relaxation.",
+      "Structure the prompt to ask for distinct options or branches.",
+      "Label each option clearly (e.g., Option 1:, Option 2:).",
+      "ToT often involves evaluating these branches, but here we focus on generating them."
+    ],
+    "success_message": "Great planning! You successfully outlined distinct branches of thought for the trip, demonstrating the ToT concept."
   }
 ]

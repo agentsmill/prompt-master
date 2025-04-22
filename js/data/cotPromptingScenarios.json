@@ -1,1 +1,39 @@
-[]
+[
+  {
+    "id": "cot-1",
+    "level": 7,
+    "title": "CoT: Age Calculation Problem",
+    "description": "Chain of Thought (CoT) prompting guides the LLM to show its reasoning step-by-step, improving accuracy for problems requiring logic. Solve the age calculation problem using CoT.",
+    "task": "When I was 3 years old, my partner was 3 times my age. Now, I am 20 years old. How old is my partner?",
+    "prompt_template": "Solve the following age problem. Instruct the model to think step-by-step before giving the final answer.\n\nProblem: When I was 3 years old, my partner was 3 times my age. Now, I am 20 years old. How old is my partner?\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "llm_evaluation",
+      "evaluation_prompt": "Evaluate the following LLM response. Did it show clear step-by-step reasoning to solve the age problem? Does it arrive at the correct answer (26)? Respond with only 'Correct' or 'Incorrect'.\n\nLLM Response:\n{llm_response}",
+      "expected_pattern": "Correct"
+    },
+    "hints": [
+      "Explicitly tell the model to 'think step-by-step' or 'show your reasoning'.",
+      "Place this instruction after the problem statement.",
+      "Check the steps: Calculate partner's age then (3*3=9), calculate time passed (20-3=17), add time passed to partner's initial age (9+17=26)."
+    ],
+    "success_message": "Correct! You successfully used Chain of Thought prompting to guide the LLM through the reasoning steps."
+  },
+  {
+    "id": "cot-2",
+    "level": 7,
+    "title": "CoT: Multi-Step Logic Puzzle",
+    "description": "CoT is useful for puzzles requiring multiple logical deductions. Solve the following simple logic puzzle by showing the steps.",
+    "task": "If A is taller than B, and C is shorter than B, who is the tallest?",
+    "prompt_template": "Solve the following logic puzzle. Instruct the model to explain its reasoning step-by-step.\n\nPuzzle: If A is taller than B, and C is shorter than B, who is the tallest?\n\nYour prompt:",
+    "evaluation_logic": {
+      "type": "llm_evaluation",
+      "evaluation_prompt": "Evaluate the following LLM response. Did it correctly deduce that A is the tallest by showing the steps (A > B, C < B, therefore A > B > C)? Respond with only 'Correct' or 'Incorrect'.\n\nLLM Response:\n{llm_response}",
+      "expected_pattern": "Correct"
+    },
+    "hints": [
+      "Instruct the model to 'think step-by-step' or 'explain your reasoning'.",
+      "The key steps are establishing the height relationships (A>B, C<B) and deducing the final order."
+    ],
+    "success_message": "Excellent deduction! You guided the LLM using CoT to solve the logic puzzle correctly."
+  }
+]

@@ -1,1 +1,22 @@
-[] 
+[
+  {
+    "id": "ape-1",
+    "level": 10,
+    "title": "APE: Generating Prompt Variations",
+    "description": "Automatic Prompt Engineering (APE) uses an LLM to generate prompt variations for a task. Your task is to prompt the LLM to create different ways to ask for a weather forecast.",
+    "task": "Generate 5 different ways (prompt variations) a user might ask for the weather forecast for London tomorrow.",
+    "prompt_template": "Generate 5 prompt variations with the same meaning as 'What is the weather forecast for London tomorrow?'.\n\nPrompt Variations:",
+    "evaluation_logic": {
+      "type": "llm_evaluation",
+      "evaluation_prompt": "Evaluate the following LLM response. Does it provide at least 3-5 distinct variations for asking about London's weather tomorrow, maintaining the core meaning? Respond with only 'Correct' or 'Incorrect'.\n\nLLM Response:\n{llm_response}",
+      "expected_pattern": "Correct"
+    },
+    "hints": [
+      "Clearly state the original prompt/intent ('weather for London tomorrow').",
+      "Specify the number of variations desired (e.g., 'Generate 5 variations').",
+      "Ensure the core meaning (weather, London, tomorrow) is preserved in the variations.",
+      "APE is often used to find the *best* prompt through evaluation, but here we focus on generation."
+    ],
+    "success_message": "Excellent! You used the LLM itself to generate diverse prompt variations, showcasing the APE technique."
+  }
+] 

@@ -1,1 +1,21 @@
-[] 
+[
+  {
+    "id": "code-prompt-1",
+    "level": 11,
+    "title": "Code Prompting: Bash Script Generation",
+    "description": "LLMs can generate code snippets. Your task is to prompt the LLM to write a Bash script that renames files in a specified folder by prepending 'draft_'.",
+    "task": "Write a Bash script that:\n1. Asks the user for a folder name.\n2. Checks if the folder exists.\n3. Renames all files inside that folder by prepending 'draft_' to their names.",
+    "prompt_template": "Write a code snippet in Bash that performs the following actions:\n1. Ask for a folder name.\n2. Check if the folder exists.\n3. Rename all files in the folder by prepending 'draft_' to the file name.\n\nBash Script:",
+    "evaluation_logic": {
+      "type": "llm_evaluation",
+      "evaluation_prompt": "Evaluate the following Bash script. Does it correctly implement the required steps: prompt for folder, check existence (-d), loop through files, use 'mv' to rename with 'draft_' prepended? Respond with only 'Correct' or 'Incorrect'.\n\nBash Script:\n{llm_response}",
+      "expected_pattern": "Correct"
+    },
+    "hints": [
+      "Clearly list the required steps for the script.",
+      "Specify the language: 'Write a code snippet in Bash...'.",
+      "Key Bash commands to look for in the output: 'read', 'if [ -d ... ]', 'for file in ...', 'mv', 'basename'."
+    ],
+    "success_message": "Excellent! The generated Bash script correctly implements the file renaming logic."
+  }
+] 

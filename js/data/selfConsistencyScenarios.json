@@ -18,5 +18,25 @@
     "task_input": "Forecast dominant battery chemistry for grid storage in 10 years.",
     "concept_focus": "Self-Consistency samples diverse reasoning paths for forecasting.",
     "evaluation_keywords": ["forecast", "battery", "grid storage", "chemistry", "dominant", "probable", "trends"]
+  },
+  {
+    "id": "self-consistency-1",
+    "level": 8,
+    "title": "Self-Consistency: Email Classification",
+    "description": "Self-consistency improves reliability by generating multiple reasoning paths (like CoT) for the same prompt and choosing the most frequent answer. Your task is to perform *one* CoT-style reasoning to classify an email's importance, simulating one path in a self-consistency check.",
+    "task": "Classify the following email as IMPORTANT or NOT IMPORTANT. Use step-by-step reasoning (like Chain of Thought) to explain your decision.\n\nEMAIL:\nHi,\nI have seen you use Wordpress for your website. A great open source content management system... [content shortened for brevity] ... I did notice a bug in the contact form... See the attached screenshot... Notice the JavaScript alert box that I inv0k3d. But for the rest it's a great website... Feel free to leave the bug in the website...\nCheers,\nHarry the Hacker.",
+    "prompt_template": "Classify the email below as IMPORTANT or NOT IMPORTANT. Think step-by-step and explain your reasoning.\n\nEMAIL:\n[Email Content Here]\n\nClassification and Reasoning:",
+    "evaluation_logic": {
+      "type": "llm_evaluation",
+      "evaluation_prompt": "Evaluate the following LLM response. Does it classify the email as IMPORTANT and provide logical reasoning steps focusing on the security vulnerability mentioned (JavaScript injection, potential exploit)? Respond with only 'Correct' or 'Incorrect'.\n\nLLM Response:\n{llm_response}",
+      "expected_pattern": "Correct"
+    },
+    "hints": [
+      "Instruct the model to 'think step-by-step' or 'explain why'.",
+      "Focus reasoning on the security aspect mentioned (JavaScript alert box, hacker).",
+      "The potential security risk makes the email IMPORTANT, despite the sender's casual tone.",
+      "Self-consistency involves running this multiple times; we're just doing one run here."
+    ],
+    "success_message": "Well reasoned! You identified the importance despite the tricky wording. Self-consistency would run this multiple times to confirm."
   }
 ]
