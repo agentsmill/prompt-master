@@ -1,34 +1,38 @@
+/**
+ * ContextualPromptingModule
+ * Teaches contextual prompting techniques.
+ */
 export class ContextualPromptingModule {
     constructor(engine) {
         this.engine = engine;
+        this.ctx = engine.ctx;
         this.scenarios = [];
         this.currentScenarioIdx = 0;
         this.loaded = false;
-        this.statusMessage = "";
         this.init();
     }
 
     async init() {
+        const scenarioFile = "js/data/contextualPromptingScenarios.json";
+        console.log(`ContextualPromptingModule: Loading scenarios from ${scenarioFile}`);
         try {
-            const resp = await fetch("js/data/contextualPromptingScenarios.json");
+            const resp = await fetch(scenarioFile);
             if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
             this.scenarios = await resp.json();
+            if (!Array.isArray(this.scenarios) || this.scenarios.length === 0) {
+                throw new Error('Invalid scenario data format');
+            }
             this.loaded = true;
-            this.resetStatusMessage();
+            this.reset();
         } catch (e) {
-            console.error("Failed to load contextual prompting scenarios:", e);
-            this.scenarios = [{
-                id: "fallback_context_1",
-                title: "Fallback Context Prompt",
-                description: "Explain geothermal energy. Context: Focus on residential use.",
-                context: "Focus on residential use.",
-                task_input: "Explain geothermal energy."
-            }];
+            console.error(`Failed to load scenarios from ${scenarioFile}:`, e);
+            this.scenarios = [{ id: "fallback_context_1", title: "Fallback Context Prompt", description: "Incorporate provided context.", type:"contextual-prompting", domain:"Fallback", context:"Sample context." }];
             this.loaded = true;
-            this.currentScenarioIdx = 0;
-            this.statusMessage = "Using fallback contextual scenario.";
+            this.reset();
         }
     }
+
+    update(delta) {}
 
     render(ctx) {
         ctx.save();
@@ -36,84 +40,110 @@ export class ContextualPromptingModule {
         ctx.fillStyle = "#ffe066"; // Yellow title
         ctx.textAlign = "left";
 
-        if (!this.loaded) { ctx.fillText("Loading...", 24, 48); ctx.restore(); return; }
+        if (!this.loaded || this.scenarios.length === 0) {
+            ctx.fillText("Loading Context Scenarios...", 24, 48);
+            ctx.restore();
+            return;
+        }
         const scenario = this.scenarios[this.currentScenarioIdx];
-        if (!scenario) { ctx.fillStyle = "#ff6b6b"; ctx.fillText("Error: Scenario not found.", 24, 48); ctx.restore(); return; }
+        if (!scenario) {
+            ctx.fillStyle = "#ff6b6b"; // Error color
+            ctx.fillText("Error: Invalid scenario index.", 24, 48);
+            ctx.restore();
+            return;
+        }
 
-        ctx.fillText("Contextual Prompting Challenge:", 24, 48);
-        ctx.fillStyle = "#44e0ff"; ctx.fillText(scenario.title, 24, 80);
-
-        ctx.fillStyle = "#b0b8c1";
-        ctx.fillText(scenario.description.substring(0, 50) + "...", 24, 112);
-
-        ctx.fillStyle = "#7fff6a"; // Green required context
-        ctx.fillText(`Required Context: ${scenario.context}`, 24, 150);
-
-        ctx.fillStyle = "#fff";
-        ctx.fillText("Prompt:", 24, 200);
-        ctx.fillText("[Type prompt below, include the context]", 24, 230);
-
-        ctx.fillStyle = "#ffec70"; ctx.fillText(this.statusMessage, 24, 300);
+        ctx.fillText(`Contextual Prompting:`, 24, 48);
+        ctx.fillStyle = "#44e0ff"; // Blue subtitle
+        ctx.fillText(scenario.title || "Untitled", 24, 80);
+        ctx.fillStyle = "#b0b8c1"; // Light gray description
+        const descriptionEndY = this.wrapText(ctx, scenario.description || "No description.", 24, 120, 432, 24);
+        
+        // Display the Context
+        ctx.fillStyle = "#ffec70"; // Yellow for context label
+        const contextLabelY = descriptionEndY + 15; 
+        ctx.fillText(`Context to Include:`, 24, contextLabelY);
+        ctx.fillStyle = "#cccccc"; // Lighter gray for context text
+        const contextEndY = this.wrapText(ctx, scenario.context || "No context provided.", 24, contextLabelY + 24, 432, 18); // Slightly smaller line height for context
+        
+        ctx.fillStyle = "#7fff6a"; // Green for prompt label
+        const promptLabelY = contextEndY + 30;
+        ctx.fillText("Your Prompt:", 24, promptLabelY);
         ctx.restore();
     }
 
+    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        const words = text.split(" ");
+        let line = "";
+        let currentY = y;
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + " ";
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+                ctx.fillText(line, x, currentY);
+                line = words[n] + " ";
+                currentY += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, x, currentY);
+        return currentY + lineHeight;
+    }
+
     processPrompt(promptText) {
-        if (!this.loaded || this.scenarios.length === 0) return;
+        const feedbackBox = document.getElementById('feedback-box');
+        if (!this.loaded || !feedbackBox) return;
         const scenario = this.scenarios[this.currentScenarioIdx];
-        const promptLower = promptText.toLowerCase().trim();
+        if (!scenario) {
+            feedbackBox.textContent = "Error: Invalid scenario.";
+            return;
+        }
+        console.log(`(Contextual) Processing prompt for challenge: ${scenario.id}`, promptText);
+        let feedbackMessage = "Evaluating contextual prompt...";
         let score = 0;
-        let feedback = [];
+        const promptLower = promptText.toLowerCase();
+        const contextLower = scenario.context?.toLowerCase() || "";
+        // Get some non-trivial keywords from context to check for inclusion
+        const contextKeywords = contextLower.split(' ').filter(w => w.length > 4).slice(0, 4); 
 
-        console.log(`(Level 5) Processing contextual prompt for: ${scenario.id}`);
-
-        // Evaluation 1: Does the prompt include the core context? (Simplified check)
-        // Check for a significant portion of the context string
-        const contextCore = scenario.context.toLowerCase().substring(0, 25); // Check first 25 chars
-        if (promptLower.includes(contextCore) || promptLower.includes("context:")) {
-            score += 7;
-            feedback.push("Includes context: ✔️");
+        // Basic check: Does the prompt contain some keywords from the context?
+        if (contextKeywords.length > 0 && contextKeywords.some(kw => promptLower.includes(kw))) {
+            score += 10;
+            feedbackMessage = "Context included/referenced: ✔️";
+        } else if (contextKeywords.length > 0) {
+            feedbackMessage = `Prompt should reference the provided context ('${scenario.context.substring(0, 30)}...'): ❌`;
         } else {
-            feedback.push(`Prompt should include the context ('${scenario.context}'): ❌`);
+            feedbackMessage = "No specific context provided for this scenario.";
+            score = 10; // Auto-pass if no context
         }
 
-        // Evaluation 2: Does the prompt address the core task?
-        const taskWords = scenario.task_input.toLowerCase().split(' ').slice(0, 3);
-        if (taskWords.every(word => promptLower.includes(word))) {
-            score += 3;
-            feedback.push("Addresses core task: ✔️");
-        } else {
-            feedback.push(`Address the specific task ('${scenario.task_input}'): ❌`);
-        }
+        this.engine.addScore(score);
+        feedbackBox.textContent = feedbackMessage;
 
-
-        this.statusMessage = feedback.join(' | ');
-        const qualityThreshold = 7; // Needs context included
-
-        if (score > 0) this.engine.addScore(score);
-
+        const qualityThreshold = 8;
         if (score >= qualityThreshold) {
-            this.statusMessage += " | Context applied! Advancing.";
+            console.log(`(Contextual) Prompt evaluated. Score: ${score}. Advancing.`);
+            feedbackMessage += " | Context used effectively! Advancing.";
             this.currentScenarioIdx++;
             if (this.currentScenarioIdx >= this.scenarios.length) {
+                feedbackMessage = "Contextual Prompting Module Complete!";
                 console.log("ContextualPromptingModule finished.");
-                this.engine.moduleCompleted("ContextualPromptingModule");
-                return;
-            } else {
-                this.resetStatusMessage();
+                this.engine.moduleCompleted(this.constructor.name);
             }
         } else {
-            this.statusMessage += " | Prompt needs revision. Try again!";
+            feedbackMessage += " | Needs improvement. Try again!";
+            console.log(`(Contextual) Prompt evaluated. Score: ${score}. Needs improvement.`);
         }
-        console.log(`Prompt evaluated. Score: ${score}.`);
+        feedbackBox.textContent = feedbackMessage;
     }
 
     reset() {
         console.log("Resetting ContextualPromptingModule...");
         this.currentScenarioIdx = 0;
-        this.resetStatusMessage();
+        const feedbackBox = document.getElementById('feedback-box');
+        if (feedbackBox) {
+            feedbackBox.textContent = "Ready for the Contextual Prompting challenge!";
+        }
     }
-
-     resetStatusMessage() {
-         this.statusMessage = this.loaded ? "Ready for a contextual prompting challenge!" : "Loading...";
-     }
 }

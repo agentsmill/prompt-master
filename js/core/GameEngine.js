@@ -11,6 +11,8 @@ import { StepBackPromptingModule } from "../modules/StepBackPromptingModule.js";
 import { CoTPromptingModule } from "../modules/CoTPromptingModule.js";
 import { SelfConsistencyPromptingModule } from "../modules/SelfConsistencyPromptingModule.js";
 import { ToTPromptingModule } from "../modules/ToTPromptingModule.js";
+import { APEModule } from "../modules/APEModule.js"; // Assuming filename is APEModule.js
+import { CodePromptingModule } from "../modules/CodePromptingModule.js";
 
 export class GameEngine {
   constructor(canvasId, onGameOver) {
@@ -43,8 +45,7 @@ export class GameEngine {
     console.log(`Initializing modules for player level: ${this.playerLevel}`);
     // Initialize all potentially available modules
     this.modules = {}; 
-    this.modules["EnergyConversion"] = new EnergyConversionModule(this); // Covers Level 1 & 2 for now
-    // Add placeholders for other modules when created
+    this.modules["EnergyConversion"] = new EnergyConversionModule(this); // Covers Level 1 & 2 
     this.modules["RolePrompting"] = new RolePromptingModule(this); // Level 3
     this.modules["SystemPrompting"] = new SystemPromptingModule(this); // Level 4
     this.modules["ContextualPrompting"] = new ContextualPromptingModule(this); // Level 5
@@ -52,6 +53,8 @@ export class GameEngine {
     this.modules["CoTPrompting"] = new CoTPromptingModule(this); // Level 7
     this.modules["SelfConsistencyPrompting"] = new SelfConsistencyPromptingModule(this); // Level 8
     this.modules["ToTPrompting"] = new ToTPromptingModule(this); // Level 9
+    this.modules["APE"] = new APEModule(this); // Level 10
+    this.modules["CodePrompting"] = new CodePromptingModule(this); // Level 11
 
     // Set the active module based on player level or progression
     this.activeModule = null; // Reset before selecting
@@ -60,41 +63,59 @@ export class GameEngine {
 
     switch (this.playerLevel) {
         case 1:
-            if (!this.completedModules.has("EnergyConversionModule")) targetModuleName = "EnergyConversion";
-            break;
+             if (!this.completedModules.has("EnergyConversionModule")) targetModuleName = "EnergyConversion";
+             statusIfNotImplemented = "Energy Conversion Module (Level 1)";
+             break;
         case 2:
-            if (!this.completedModules.has("FewShotModule")) targetModuleName = "EnergyConversion"; // Still handled by EnergyConversion
-            break;
+             // Level 2 uses Few-Shot, handled by EnergyConversionModule for now
+             if (!this.completedModules.has("FewShotModule")) targetModuleName = "EnergyConversion"; 
+             statusIfNotImplemented = "Few-Shot Prompting Module (Level 2)";
+             break;
         case 3:
             if (!this.completedModules.has("RolePromptingModule")) targetModuleName = "RolePrompting";
-            statusIfNotImplemented = "Role Prompting Module (Not Implemented)";
+            statusIfNotImplemented = "Role Prompting Module (Level 3)";
             break;
         case 4:
              if (!this.completedModules.has("SystemPromptingModule")) targetModuleName = "SystemPrompting";
-             statusIfNotImplemented = "System Prompting Module (Not Implemented)";
+             statusIfNotImplemented = "System Prompting Module (Level 4)";
             break;
         case 5:
              if (!this.completedModules.has("ContextualPromptingModule")) targetModuleName = "ContextualPrompting";
-             statusIfNotImplemented = "Contextual Prompting Module (Not Implemented)";
+             statusIfNotImplemented = "Contextual Prompting Module (Level 5)";
             break;
         case 6:
              if (!this.completedModules.has("StepBackPromptingModule")) targetModuleName = "StepBackPrompting";
-              statusIfNotImplemented = "Step-Back Prompting Module (Not Implemented)";
+              statusIfNotImplemented = "Step-Back Prompting Module (Level 6)";
             break;
         case 7:
              if (!this.completedModules.has("CoTPromptingModule")) targetModuleName = "CoTPrompting";
-             statusIfNotImplemented = "Chain of Thought Module (Not Implemented)";
+             statusIfNotImplemented = "Chain of Thought Module (Level 7)";
             break;
         case 8:
             if (!this.completedModules.has("SelfConsistencyPromptingModule")) targetModuleName = "SelfConsistencyPrompting";
-             statusIfNotImplemented = "Self-Consistency Module (Not Implemented)";
+             statusIfNotImplemented = "Self-Consistency Module (Level 8)";
             break;
         case 9:
             if (!this.completedModules.has("ToTPromptingModule")) targetModuleName = "ToTPrompting";
-            statusIfNotImplemented = "Tree of Thoughts Module (Not Implemented)";
+            statusIfNotImplemented = "Tree of Thoughts Module (Level 9)";
             break;
+        case 10:
+            if (!this.completedModules.has("APEModule")) targetModuleName = "APE";
+            statusIfNotImplemented = "APE Module (Level 10)";
+            break;
+        case 11:
+             if (!this.completedModules.has("CodePromptingModule")) targetModuleName = "CodePrompting";
+             statusIfNotImplemented = "Code Prompting Module (Level 11)";
+             break;
         default:
             console.log(`Player level ${this.playerLevel} not recognized or all modules completed.`);
+            // Check if *all* implemented modules are done
+            if (this.allModulesCompleted()) {
+                 this.statusMessage = "Congratulations! All current challenges completed!";
+             } else {
+                 this.statusMessage = `Error: Level ${this.playerLevel} has no module defined.`;
+             }
+             targetModuleName = null; // Ensure no module is selected
             break;
     }
 
@@ -305,6 +326,12 @@ export class GameEngine {
     } else if (moduleName === "ToTPromptingModule" && this.playerLevel === 9) {
         console.log("Player completed the final level!");
         // Potentially set a flag or different state instead of just incrementing level
+    } else if (moduleName === "APEModule" && this.playerLevel === 10) {
+        console.log("Player completed the final level!");
+        // Potentially set a flag or different state instead of just incrementing level
+    } else if (moduleName === "CodePromptingModule" && this.playerLevel === 11) {
+        console.log("Player completed the final level!");
+        // Potentially set a flag or different state instead of just incrementing level
     }
     // Add more level-up conditions here
 
@@ -333,7 +360,9 @@ export class GameEngine {
           "StepBackPromptingModule",
           "CoTPromptingModule",
           "SelfConsistencyPromptingModule",
-          "ToTPromptingModule"
+          "ToTPromptingModule",
+          "APEModule",
+          "CodePromptingModule"
       ];
       // Check if every module in the list exists in the completedModules set
       return definedModules.every(moduleName => this.completedModules.has(moduleName));

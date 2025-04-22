@@ -1,6 +1,11 @@
+/**
+ * CoTPromptingModule
+ * Teaches Chain of Thought prompting techniques.
+ */
 export class CoTPromptingModule {
     constructor(engine) {
         this.engine = engine;
+        this.ctx = engine.ctx;
         this.scenarios = [];
         this.currentScenarioIdx = 0;
         this.loaded = false;
@@ -9,113 +14,123 @@ export class CoTPromptingModule {
     }
 
     async init() {
+        const scenarioFile = "js/data/cotPromptingScenarios.json";
+        console.log(`CoTPromptingModule: Loading scenarios from ${scenarioFile}`);
         try {
-            const resp = await fetch("js/data/cotPromptingScenarios.json");
+            const resp = await fetch(scenarioFile);
             if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
             this.scenarios = await resp.json();
+            if (!Array.isArray(this.scenarios) || this.scenarios.length === 0) {
+                throw new Error('Invalid scenario data format');
+            }
             this.loaded = true;
-            this.resetStatusMessage();
+            this.reset();
         } catch (e) {
-            console.error("Failed to load CoT prompting scenarios:", e);
-            this.scenarios = [{
-                id: "fallback_cot_1",
-                title: "Fallback CoT Prompt",
-                description: "Calculate 5 * 6 + 3. Use step-by-step thinking.",
-                task_input: "5 * 6 + 3",
-                required_instruction: "step by step",
-                evaluation_keywords: ["step", "multiply", "add", "result"]
-            }];
+            console.error(`Failed to load scenarios from ${scenarioFile}:`, e);
+            this.scenarios = [{ id: "fallback_cot_1", title: "Fallback CoT Prompt", description: "Ask AI to think step-by-step.", type:"cot-prompting", domain:"Fallback", required_instruction:"step by step" }];
             this.loaded = true;
-            this.currentScenarioIdx = 0;
-            this.statusMessage = "Using fallback CoT scenario.";
+            this.reset();
         }
     }
 
+    update(delta) {}
+
     render(ctx) {
-         ctx.save();
+        ctx.save();
         ctx.font = '16px "Press Start 2P", monospace';
-        ctx.fillStyle = "#ffe066"; ctx.textAlign = "left";
+        ctx.fillStyle = "#ffe066";
+        ctx.textAlign = "left";
 
-        if (!this.loaded) { ctx.fillText("Loading...", 24, 48); ctx.restore(); return; }
+        if (!this.loaded || this.scenarios.length === 0) {
+            ctx.fillText("Loading CoT Scenarios...", 24, 48);
+            ctx.restore();
+            return;
+        }
         const scenario = this.scenarios[this.currentScenarioIdx];
-        if (!scenario) { ctx.fillStyle = "#ff6b6b"; ctx.fillText("Error: Scenario not found.", 24, 48); ctx.restore(); return; }
+        if (!scenario) { ctx.fillStyle = "#ff6b6b"; ctx.fillText("Error: Invalid scenario index.", 24, 48); ctx.restore(); return; }
 
-        ctx.fillText("Chain of Thought Challenge:", 24, 48);
-        ctx.fillStyle = "#44e0ff"; ctx.fillText(scenario.title, 24, 80);
-
+        ctx.fillText(`Chain of Thought (CoT) Prompting:`, 24, 48);
+        ctx.fillStyle = "#44e0ff";
+        ctx.fillText(scenario.title || "Untitled", 24, 80);
         ctx.fillStyle = "#b0b8c1";
-        ctx.fillText(scenario.description.substring(0, 50) + "...", 24, 112);
-
-        ctx.fillStyle = "#7fff6a"; // Green required instruction
-        ctx.fillText(`Required Instruction: Include '${scenario.required_instruction}'`, 24, 150);
-
-        ctx.fillStyle = "#fff";
-        ctx.fillText("Prompt:", 24, 200);
-        ctx.fillText("[Instruct the AI to show its reasoning]", 24, 230);
-
-        ctx.fillStyle = "#ffec70"; ctx.fillText(this.statusMessage, 24, 300);
+        const descriptionEndY = this.wrapText(ctx, scenario.description || "No description.", 24, 120, 432, 24);
+        ctx.fillStyle = "#ffec70"; // Yellow for hint
+        const hintLabelY = descriptionEndY + 15;
+        ctx.fillText(`Hint: Include instruction like '${scenario.required_instruction || 'step by step'}'`, 24, hintLabelY);
+        ctx.fillStyle = "#7fff6a";
+        const promptLabelY = hintLabelY + 30;
+        ctx.fillText("Your Prompt:", 24, promptLabelY);
         ctx.restore();
     }
 
+    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        const words = text.split(" ");
+        let line = "";
+        let currentY = y;
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + " ";
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+                ctx.fillText(line, x, currentY);
+                line = words[n] + " ";
+                currentY += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, x, currentY);
+        return currentY + lineHeight;
+    }
+
     processPrompt(promptText) {
-        if (!this.loaded || this.scenarios.length === 0) return;
+        const feedbackBox = document.getElementById('feedback-box');
+        if (!this.loaded || !feedbackBox) return;
         const scenario = this.scenarios[this.currentScenarioIdx];
-        const promptLower = promptText.toLowerCase().trim();
+        if (!scenario) { feedbackBox.textContent = "Error: Invalid scenario."; return; }
+        console.log(`(CoT) Processing prompt for challenge: ${scenario.id}`, promptText);
+        let feedbackMessage = "Evaluating CoT prompt...";
         let score = 0;
-        let feedback = [];
+        const promptLower = promptText.toLowerCase();
+        const requiredInstructionLower = scenario.required_instruction?.toLowerCase() || "step by step";
 
-        console.log(`(Level 7) Processing CoT prompt for: ${scenario.id}`);
-
-        // Evaluation 1: Does the prompt include the required CoT instruction?
-        if (promptLower.includes(scenario.required_instruction.toLowerCase()) || promptLower.includes("step by step")) {
-            score += 7;
-            feedback.push("Includes CoT instruction: ✔️");
+        // Basic check: Does the prompt contain the required CoT instruction?
+        if (promptLower.includes(requiredInstructionLower)) {
+            score += 10;
+            feedbackMessage = "CoT instruction included: ✔️";
         } else {
-            feedback.push(`Prompt should ask for step-by-step reasoning ('${scenario.required_instruction}'): ❌`);
+            feedbackMessage = `Prompt should include a CoT instruction like '${scenario.required_instruction || 'step by step'}': ❌`;
         }
 
-        // Evaluation 2: Does the prompt include keywords related to the task?
-        let taskKeywordsMet = 0;
-         scenario.evaluation_keywords.forEach(keyword => {
-             if (promptLower.includes(keyword)) {
-                 taskKeywordsMet++;
-             }
-         });
-        if (taskKeywordsMet >= 2) {
-             score += 3;
-            feedback.push("Addresses specific task: ✔️");
-        } else {
-             feedback.push(`Address the specific task using relevant terms: ❌`);
-        }
+        this.engine.addScore(score);
+        feedbackBox.textContent = feedbackMessage;
 
-        this.statusMessage = feedback.join(' | ');
-        const qualityThreshold = 7; // Must ask for CoT
-
-        if (score > 0) this.engine.addScore(score);
-
+        const qualityThreshold = 8;
         if (score >= qualityThreshold) {
-            this.statusMessage += " | Reasoning requested! Advancing.";
+            console.log(`(CoT) Prompt evaluated. Score: ${score}. Advancing.`);
+            feedbackMessage += " | CoT applied! Advancing.";
             this.currentScenarioIdx++;
             if (this.currentScenarioIdx >= this.scenarios.length) {
+                feedbackMessage = "CoT Prompting Module Complete!";
                 console.log("CoTPromptingModule finished.");
-                this.engine.moduleCompleted("CoTPromptingModule");
-                return;
-            } else {
-                 this.resetStatusMessage();
+                this.engine.moduleCompleted(this.constructor.name);
             }
         } else {
-            this.statusMessage += " | Prompt needs revision. Try again!";
+            feedbackMessage += " | Needs improvement. Try again!";
+            console.log(`(CoT) Prompt evaluated. Score: ${score}. Needs improvement.`);
         }
-        console.log(`Prompt evaluated. Score: ${score}.`);
+        feedbackBox.textContent = feedbackMessage;
     }
 
-     reset() {
+    reset() {
         console.log("Resetting CoTPromptingModule...");
         this.currentScenarioIdx = 0;
-        this.resetStatusMessage();
+        const feedbackBox = document.getElementById('feedback-box');
+        if (feedbackBox) {
+            feedbackBox.textContent = "Ready for the Chain of Thought (CoT) challenge!";
+        }
     }
 
-     resetStatusMessage() {
+    resetStatusMessage() {
         this.statusMessage = this.loaded ? "Ready for a Chain of Thought challenge!" : "Loading...";
     }
 }

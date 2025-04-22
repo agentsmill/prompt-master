@@ -1,6 +1,11 @@
+/**
+ * ToTPromptingModule
+ * Teaches Tree of Thoughts prompting concepts.
+ */
 export class ToTPromptingModule {
-     constructor(engine) {
+    constructor(engine) {
         this.engine = engine;
+        this.ctx = engine.ctx;
         this.scenarios = [];
         this.currentScenarioIdx = 0;
         this.loaded = false;
@@ -9,113 +14,124 @@ export class ToTPromptingModule {
     }
 
     async init() {
+        const scenarioFile = "js/data/totScenarios.json";
+        console.log(`ToTPromptingModule: Loading scenarios from ${scenarioFile}`);
         try {
-            const resp = await fetch("js/data/totScenarios.json");
+            const resp = await fetch(scenarioFile);
             if (!resp.ok) throw new Error(`HTTP error! status: ${resp.status}`);
             this.scenarios = await resp.json();
+            if (!Array.isArray(this.scenarios) || this.scenarios.length === 0) {
+                throw new Error('Invalid scenario data format');
+            }
             this.loaded = true;
-            this.resetStatusMessage();
+            this.reset();
         } catch (e) {
-            console.error("Failed to load ToT scenarios:", e);
-             this.scenarios = [{
-                id: "fallback_tot_1",
-                title: "Fallback ToT",
-                description: "Plan complex project X. Explain ToT.",
-                task_input: "Plan complex project X.",
-                concept_focus: "ToT explores multiple paths.",
-                evaluation_keywords: ["plan", "project", "explore", "evaluate"]
-            }];
-            this.loaded = true; this.currentScenarioIdx = 0;
-            this.statusMessage = "Using fallback ToT scenario.";
+            console.error(`Failed to load scenarios from ${scenarioFile}:`, e);
+            this.scenarios = [{ id: "fallback_tot_1", title: "Fallback ToT", description: "Concept: Explore multiple reasoning paths.", type:"tot-prompting", domain:"Conceptual", task_input:"Design complex system."}];
+            this.loaded = true;
+            this.reset();
         }
     }
 
-     render(ctx) {
-         ctx.save();
-         ctx.font = '16px "Press Start 2P", monospace';
-         ctx.fillStyle = "#ffe066"; ctx.textAlign = "left";
+    update(delta) {}
 
-         if (!this.loaded) { ctx.fillText("Loading...", 24, 48); ctx.restore(); return; }
-         const scenario = this.scenarios[this.currentScenarioIdx];
-         if (!scenario) { ctx.fillStyle = "#ff6b6b"; ctx.fillText("Error: Scenario not found.", 24, 48); ctx.restore(); return; }
+    render(ctx) {
+        ctx.save();
+        ctx.font = '16px "Press Start 2P", monospace';
+        ctx.fillStyle = "#ffe066";
+        ctx.textAlign = "left";
 
-         ctx.fillText("Tree of Thoughts Challenge:", 24, 48);
-         ctx.fillStyle = "#44e0ff"; ctx.fillText(scenario.title, 24, 80);
+        if (!this.loaded || this.scenarios.length === 0) {
+            ctx.fillText("Loading ToT Scenarios...", 24, 48);
+            ctx.restore();
+            return;
+        }
+        const scenario = this.scenarios[this.currentScenarioIdx];
+        if (!scenario) { ctx.fillStyle = "#ff6b6b"; ctx.fillText("Error: Invalid scenario index.", 24, 48); ctx.restore(); return; }
 
-         ctx.fillStyle = "#b0b8c1";
-         ctx.fillText(scenario.description.substring(0, 50) + "...", 24, 112);
-         ctx.fillStyle = "#7fff6a";
-         ctx.fillText(`Concept: ${scenario.concept_focus}`, 24, 150);
-
-         ctx.fillStyle = "#fff";
-         ctx.fillText("Prompt:", 24, 200);
-         ctx.fillText("[Ask AI to explore/evaluate options]", 24, 230);
-
-         ctx.fillStyle = "#ffec70"; ctx.fillText(this.statusMessage, 24, 300);
-         ctx.restore();
+        ctx.fillText(`Tree of Thoughts (ToT) Prompting:`, 24, 48);
+        ctx.fillStyle = "#44e0ff";
+        ctx.fillText(scenario.title || "Untitled", 24, 80);
+        ctx.fillStyle = "#b0b8c1";
+        const descriptionEndY = this.wrapText(ctx, scenario.description || "No description.", 24, 120, 432, 24);
+        ctx.fillStyle = "#ffec70"; // Yellow hint
+        const hintLabelY = descriptionEndY + 15;
+        ctx.fillText(`Hint: Ask AI to explore options or evaluate alternatives.`, 24, hintLabelY);
+        ctx.fillStyle = "#7fff6a";
+        const promptLabelY = hintLabelY + 30;
+        ctx.fillText("Your Prompt:", 24, promptLabelY);
+        ctx.restore();
     }
 
-     processPrompt(promptText) {
-         if (!this.loaded || this.scenarios.length === 0) return;
-         const scenario = this.scenarios[this.currentScenarioIdx];
-         const promptLower = promptText.toLowerCase().trim();
-         let score = 0;
-         let feedback = [];
-
-         console.log(`(Level 9) Processing ToT prompt for: ${scenario.id}`);
-
-         // Evaluation 1: Does the prompt ask for exploration or evaluation of paths/strategies?
-         const explorationWords = ["explore", "evaluate", "assess", "compare strategies", "consider options", "pathways", "directions"];
-         if (explorationWords.some(word => promptLower.includes(word))) {
-             score += 7;
-             feedback.push("Asks for exploration/evaluation: ✔️");
-         } else {
-             feedback.push(`Prompt should ask to explore or evaluate options/paths: ❌`);
-         }
-
-         // Evaluation 2: Does it define the core complex task?
-        let taskKeywordsMet = 0;
-         scenario.evaluation_keywords.forEach(keyword => {
-             if (promptLower.includes(keyword)) {
-                 taskKeywordsMet++;
-             }
-         });
-         if (taskKeywordsMet >= 3) {
-            score += 3;
-            feedback.push("Clearly defined complex task: ✔️");
-         } else {
-             feedback.push(`Clearly define the task ('${scenario.task_input}') using relevant terms: ❌`);
-         }
-
-
-         this.statusMessage = feedback.join(' | ');
-         const qualityThreshold = 7; // Must ask for exploration
-
-         if (score > 0) this.engine.addScore(score);
-
-         if (score >= qualityThreshold) {
-             this.statusMessage += ` | Exploration requested! ToT would analyze multiple branches here. Advancing.`;
-             this.currentScenarioIdx++;
-             if (this.currentScenarioIdx >= this.scenarios.length) {
-                 console.log("ToTPromptingModule finished.");
-                 this.engine.moduleCompleted("ToTPromptingModule");
-                 return;
-             } else {
-                  this.resetStatusMessage();
-             }
-         } else {
-             this.statusMessage += " | Prompt needs revision for this exploration task. Try again!";
-         }
-         console.log(`Prompt evaluated. Score: ${score}.`);
+    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        const words = text.split(" ");
+        let line = "";
+        let currentY = y;
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + " ";
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+                ctx.fillText(line, x, currentY);
+                line = words[n] + " ";
+                currentY += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, x, currentY);
+        return currentY + lineHeight;
     }
 
-     reset() {
-         console.log("Resetting ToTPromptingModule...");
-         this.currentScenarioIdx = 0;
-         this.resetStatusMessage();
-     }
+    processPrompt(promptText) {
+        const feedbackBox = document.getElementById('feedback-box');
+        if (!this.loaded || !feedbackBox) return;
+        const scenario = this.scenarios[this.currentScenarioIdx];
+        if (!scenario) { feedbackBox.textContent = "Error: Invalid scenario."; return; }
+        console.log(`(ToT) Processing prompt for challenge: ${scenario.id}`, promptText);
+        let feedbackMessage = "Evaluating ToT prompt concept...";
+        let score = 0;
+        const promptLower = promptText.toLowerCase();
+        const explorationKeywords = ["explore", "options", "alternatives", "evaluate", "compare paths", "consider different"];
 
-     resetStatusMessage() {
+        // Check if prompt encourages exploration
+        if (explorationKeywords.some(kw => promptLower.includes(kw))) {
+            score += 10;
+            feedbackMessage = "Good! Prompt encourages exploration, suitable for ToT. ✔️";
+        } else {
+            feedbackMessage = "Consider asking the AI to explore options or evaluate alternatives. 🤔";
+            score += 5; // Partial credit
+        }
+
+        this.engine.addScore(score);
+        feedbackBox.textContent = feedbackMessage;
+
+        const qualityThreshold = 5; // Conceptual threshold
+        if (score >= qualityThreshold) {
+            console.log(`(ToT) Prompt evaluated. Score: ${score}. Advancing.`);
+            feedbackMessage += " | Advancing.";
+            this.currentScenarioIdx++;
+            if (this.currentScenarioIdx >= this.scenarios.length) {
+                feedbackMessage = "Tree of Thoughts (ToT) Module Complete!";
+                console.log("ToTPromptingModule finished.");
+                this.engine.moduleCompleted(this.constructor.name);
+            }
+        } else {
+            feedbackMessage += " | Try again!";
+            console.log(`(ToT) Prompt evaluated. Score: ${score}. Needs improvement.`);
+        }
+        feedbackBox.textContent = feedbackMessage;
+    }
+
+    reset() {
+        console.log("Resetting ToTPromptingModule...");
+        this.currentScenarioIdx = 0;
+        const feedbackBox = document.getElementById('feedback-box');
+        if (feedbackBox) {
+            feedbackBox.textContent = "Ready for the Tree of Thoughts (ToT) challenge!";
+        }
+    }
+
+    resetStatusMessage() {
         this.statusMessage = this.loaded ? "Ready for a Tree of Thoughts challenge!" : "Loading...";
     }
 }
