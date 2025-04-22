@@ -1,15 +1,21 @@
 /**
  * SelfConsistencyPromptingModule
- * Teaches Self-Consistency prompting concepts.
+ * Teaches self-consistency concepts (using CoT as the base).
  */
 export class SelfConsistencyPromptingModule {
     constructor(engine) {
         this.engine = engine;
-        this.ctx = engine.ctx;
         this.scenarios = [];
         this.currentScenarioIdx = 0;
+        this.currentScenario = null;
         this.loaded = false;
-        this.statusMessage = "";
+        this.ui = {
+            title: document.getElementById('challenge-title'),
+            description: document.getElementById('challenge-description'),
+            task: document.getElementById('challenge-task'),
+            promptInput: document.getElementById('prompt-input'),
+            feedbackBox: document.getElementById('feedback-box')
+        };
         this.init();
     }
 
@@ -24,117 +30,133 @@ export class SelfConsistencyPromptingModule {
                 throw new Error('Invalid scenario data format');
             }
             this.loaded = true;
-            this.reset();
+            console.log("SelfConsistencyPromptingModule scenarios loaded successfully.");
         } catch (e) {
             console.error(`Failed to load scenarios from ${scenarioFile}:`, e);
-            this.scenarios = [{ id: "fallback_sc_1", title: "Fallback Self-Consistency", description: "Concept: Run prompt multiple times, take majority answer.", type:"self-consistency-prompting", domain:"Conceptual", task_input:"Classify complex text."}];
-            this.loaded = true;
-            this.reset();
+            if (this.ui.feedbackBox) this.ui.feedbackBox.textContent = `Error loading scenarios for Self-Consistency: ${e.message}`;
+            this.loaded = false;
         }
     }
 
-    update(delta) {}
-
-    render(ctx) {
-        ctx.save();
-        ctx.font = '16px "Press Start 2P", monospace';
-        ctx.fillStyle = "#ffe066";
-        ctx.textAlign = "left";
-
-        if (!this.loaded || this.scenarios.length === 0) {
-            ctx.fillText("Loading Self-Consistency Scenarios...", 24, 48);
-            ctx.restore();
+    startScenario(index = 0) {
+        if (!this.loaded || index >= this.scenarios.length || index < 0) {
+            console.error("Cannot start scenario: Self-Consistency module not loaded or index out of bounds.");
+            if (this.ui.feedbackBox) this.ui.feedbackBox.textContent = "Error starting Self-Consistency scenario.";
             return;
         }
-        const scenario = this.scenarios[this.currentScenarioIdx];
-        if (!scenario) { ctx.fillStyle = "#ff6b6b"; ctx.fillText("Error: Invalid scenario index.", 24, 48); ctx.restore(); return; }
-
-        ctx.fillText(`Self-Consistency Prompting:`, 24, 48);
-        ctx.fillStyle = "#44e0ff";
-        ctx.fillText(scenario.title || "Untitled", 24, 80);
-        ctx.fillStyle = "#b0b8c1";
-        const descriptionEndY = this.wrapText(ctx, scenario.description || "No description.", 24, 120, 432, 24);
-        ctx.fillStyle = "#ffec70"; // Yellow hint
-        const hintLabelY = descriptionEndY + 15;
-        ctx.fillText(`Concept: Write a single good prompt (often CoT).`, 24, hintLabelY);
-        ctx.fillStyle = "#7fff6a";
-        const promptLabelY = hintLabelY + 30;
-        ctx.fillText("Your Prompt (for simulated multiple runs):", 24, promptLabelY);
-        ctx.restore();
+        this.currentScenarioIdx = index;
+        this.currentScenario = this.scenarios[this.currentScenarioIdx];
+        console.log(`Starting SelfConsistency scenario ${this.currentScenarioIdx}: ${this.currentScenario.id}`);
+        this.render();
     }
 
-    wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-        const words = text.split(" ");
-        let line = "";
-        let currentY = y;
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + " ";
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxWidth && n > 0) {
-                ctx.fillText(line, x, currentY);
-                line = words[n] + " ";
-                currentY += lineHeight;
-            } else {
-                line = testLine;
-            }
+    render() {
+        if (!this.currentScenario || !this.ui.title) {
+            console.error("Cannot render: No current Self-Consistency scenario or UI elements missing.");
+             if(this.ui.feedbackBox) this.ui.feedbackBox.textContent = "Error rendering scenario details.";
+            return;
         }
-        ctx.fillText(line, x, currentY);
-        return currentY + lineHeight;
+
+        // Clear previous state
+        this.ui.promptInput.value = '';
+        this.ui.feedbackBox.textContent = 'Perform one CoT-style reasoning run for this task.';
+        this.ui.feedbackBox.className = 'feedback-box';
+
+        // Populate UI elements
+        this.ui.title.textContent = `Level ${this.currentScenario.level}: ${this.currentScenario.title || 'Self-Consistency Prompting'}`;
+        this.ui.description.innerHTML = this.formatText(this.currentScenario.description || 'No description.');
+        this.ui.task.innerHTML = `<strong>Your Task:</strong> ${this.formatText(this.currentScenario.task || 'No task defined.')}`;
+        this.ui.promptInput.placeholder = this.currentScenario.prompt_template || 'Enter your CoT prompt here...';
     }
 
-    processPrompt(promptText) {
-        const feedbackBox = document.getElementById('feedback-box');
-        if (!this.loaded || !feedbackBox) return;
-        const scenario = this.scenarios[this.currentScenarioIdx];
-        if (!scenario) { feedbackBox.textContent = "Error: Invalid scenario."; return; }
-        console.log(`(Self-Consistency) Processing prompt for challenge: ${scenario.id}`, promptText);
-        let feedbackMessage = "Evaluating prompt for Self-Consistency concept...";
-        let score = 0;
-        const promptLower = promptText.toLowerCase();
+    formatText(text) {
+        // Basic formatter, escape HTML and replace newlines
+        const escaped = text.replace(/&/g, "&amp;")
+                           .replace(/</g, "&lt;")
+                           .replace(/>/g, "&gt;")
+                           .replace(/"/g, "&quot;")
+                           .replace(/'/g, "&#039;");
+        return escaped.replace(/\n/g, '<br>');
+    }
 
-        // Check if prompt asks for reasoning (good practice for self-consistency)
-        if (promptLower.includes("step by step") || promptLower.includes("explain why")) {
-            score += 10;
-            feedbackMessage = "Good! Prompt asks for reasoning, suitable for self-consistency. ✔️";
+    handleSubmission(userPrompt) {
+        if (!this.currentScenario || !this.loaded) {
+            this.ui.feedbackBox.textContent = "Error: Self-Consistency module not ready or no scenario loaded.";
+            this.ui.feedbackBox.className = 'feedback-box error';
+            return;
+        }
+
+        console.log(`(Self-Consistency) Handling submission for scenario: ${this.currentScenario.id}`, userPrompt);
+        const evaluationResult = this.evaluate(userPrompt, this.currentScenario);
+
+        if (evaluationResult.success) {
+            const score = 12; // Same complexity as CoT base
+            this.ui.feedbackBox.textContent = `${this.currentScenario.success_message} (+${score} energy)`;
+            this.ui.feedbackBox.className = 'feedback-box success';
+            console.log(`(Self-Consistency) Scenario ${this.currentScenario.id} PASSED.`);
+            this.engine.completeScenario(this.constructor.name, score); // Notify engine
         } else {
-            feedbackMessage = "Consider asking for reasoning (e.g., 'step by step') to improve self-consistency. 🤔";
-            score += 5; // Still give some points for attempting
+            this.ui.feedbackBox.textContent = `Evaluation: ${evaluationResult.feedback} Try again!`;
+            this.ui.feedbackBox.className = 'feedback-box error';
+             if (this.currentScenario.hints && this.currentScenario.hints.length > 0) {
+                 const hintToShow = this.currentScenario.hints[Math.floor(Math.random() * this.currentScenario.hints.length)];
+                 this.ui.feedbackBox.textContent += ` Hint: ${hintToShow}`;
+             }
+            console.log(`(Self-Consistency) Scenario ${this.currentScenario.id} FAILED. Feedback: ${evaluationResult.feedback}`);
         }
+    }
+
+    evaluate(userPrompt, scenario) {
+        // Evaluation is similar to CoT: check for CoT instruction + task inclusion
+        if (!scenario || !scenario.evaluation_logic) return { success: false, feedback: "No evaluation criteria defined." };
+
+        const promptLower = userPrompt.toLowerCase();
+        const taskLower = scenario.task?.toLowerCase() || "";
         
-         // Simulate results
-         feedbackMessage += ` | Simulation: Prompt ran 3 times. Results: ['Answer A', 'Answer B', 'Answer A']. Majority answer: 'Answer A'.`;
+        // Check 1: Does the prompt ask for step-by-step reasoning?
+        const cotKeywords = ["step by step", "step-by-step", "show your reasoning", "explain the steps", "think step by step", "explain why"];
+        const includesCoTInstruction = cotKeywords.some(kw => promptLower.includes(kw));
 
-        this.engine.addScore(score);
-        feedbackBox.textContent = feedbackMessage;
+        if (!includesCoTInstruction) {
+            return { success: false, feedback: "Prompt should use CoT instructions (e.g., 'think step-by-step') as the basis for self-consistency runs." };
+        }
 
-        const qualityThreshold = 5; // Lower threshold as it's conceptual
-         if (score >= qualityThreshold) {
-           console.log(`(Self-Consistency) Prompt evaluated. Score: ${score}. Advancing.`);
-           feedbackMessage += " | Advancing."; // Keep feedback simple
-           this.currentScenarioIdx++;
-           if (this.currentScenarioIdx >= this.scenarios.length) {
-             feedbackMessage = "Self-Consistency Module Complete!";
-             console.log("SelfConsistencyPromptingModule finished.");
-             this.engine.moduleCompleted(this.constructor.name);
-           }
-         } else {
-             // This case might not be reached with current scoring
-             feedbackMessage += " | Try again!";
-             console.log(`(Self-Consistency) Prompt evaluated. Score: ${score}. Needs improvement.`);
-         }
-         feedbackBox.textContent = feedbackMessage;
+        // Check 2: Does the prompt include the core task elements (email classification)?
+        let includesTask = false;
+        if (scenario.id === 'self-consistency-1') { 
+             if (promptLower.includes('classify') && promptLower.includes('email') && (promptLower.includes('important') || promptLower.includes('not important')) && promptLower.includes('hacker')) {
+                 includesTask = true;
+             }
+        } else {
+             includesTask = true; // Assume task included for unknown scenarios
+        }
+
+        if (!includesTask) {
+            return { success: false, feedback: "Prompt should include the details of the email classification task." };
+        }
+
+        // Check 3: Placeholder for LLM evaluation (if defined)
+        if (scenario.evaluation_logic.type === 'llm_evaluation') {
+            console.warn("(Self-Consistency Eval) LLM evaluation specified but not implemented. Checking prompt structure only.");
+        }
+
+        // If CoT instruction and task seem included
+        return { success: true, feedback: "CoT structure for self-consistency run seems correct." };
     }
 
     reset() {
         console.log("Resetting SelfConsistencyPromptingModule...");
         this.currentScenarioIdx = 0;
-        const feedbackBox = document.getElementById('feedback-box');
-        if (feedbackBox) {
-            feedbackBox.textContent = "Ready for the Self-Consistency challenge! Write one good prompt.";
+        this.currentScenario = null;
+        if (this.ui.feedbackBox) {
+            this.ui.feedbackBox.textContent = "";
+            this.ui.feedbackBox.className = 'feedback-box';
         }
-    }
-
-    resetStatusMessage() {
-        this.statusMessage = this.loaded ? "Ready for a Self-Consistency challenge!" : "Loading...";
+        if (this.ui.promptInput) {
+            this.ui.promptInput.value = '';
+        }
+         if (this.ui.task) {
+             this.ui.task.innerHTML = '';
+         }
     }
 }
